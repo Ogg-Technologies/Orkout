@@ -1,0 +1,88 @@
+package com.oggtechnologies.orkout.ui
+
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.runtime.*
+import com.oggtechnologies.orkout.model.store.doNavigateBack
+import com.oggtechnologies.orkout.redux.Dispatch
+
+fun Context.toast(message: String) =
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+fun <I> LazyListScope.itemsWithDividers(
+    items: List<I>,
+    divider: @Composable () -> Unit = { Divider() },
+    itemContent: @Composable LazyItemScope.(item: I) -> Unit,
+) = itemsIndexedWithDividers(items, divider) { _, item ->
+    itemContent(item)
+}
+
+fun <I> LazyListScope.itemsIndexedWithDividers(
+    items: List<I>,
+    divider: @Composable () -> Unit = { Divider() },
+    itemContent: @Composable LazyItemScope.(index: Int, item: I) -> Unit,
+) {
+    items.forEachIndexed { index, item ->
+        item {
+            if (index != 0) divider()
+            itemContent(index, item)
+        }
+    }
+}
+
+@Composable
+fun BackButton(dispatch: Dispatch) {
+    IconButton(
+        onClick = { dispatch(doNavigateBack()) },
+    ) {
+        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+    }
+}
+
+@Composable
+fun SimpleStringOverflowMenu(
+    content: SimpleStringOverflowMenuScope.() -> Unit,
+) {
+    SimpleStringOverflowMenu(SimpleStringOverflowMenuScope().apply(content).items)
+}
+
+class SimpleStringOverflowMenuScope {
+    val items = mutableListOf<SimpleStringOverflowMenuItem>()
+    infix fun String.does(action: () -> Unit) {
+        items.add(SimpleStringOverflowMenuItem(this, action))
+    }
+}
+
+data class SimpleStringOverflowMenuItem(val title: String, val action: () -> Unit)
+
+@Composable
+fun SimpleStringOverflowMenu(
+    items: List<SimpleStringOverflowMenuItem>,
+) {
+    Box {
+        var isExpanded by remember { mutableStateOf(false) }
+        IconButton(onClick = { isExpanded = !isExpanded }) {
+            Icon(Icons.Default.MoreVert, contentDescription = "More")
+        }
+        DropdownMenu(
+            expanded = isExpanded,
+            onDismissRequest = { isExpanded = false }
+        ) {
+            for (item in items) {
+                DropdownMenuItem(onClick = {
+                    item.action()
+                    isExpanded = false
+                }) {
+                    Text(text = item.title)
+                }
+            }
+        }
+    }
+}
