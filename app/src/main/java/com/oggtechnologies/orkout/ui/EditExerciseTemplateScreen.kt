@@ -1,12 +1,13 @@
 package com.oggtechnologies.orkout.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 
@@ -32,18 +33,40 @@ fun EditExerciseTemplateScreen(
             )
         },
         content = {
-            Column(Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxSize()) {
                 TextField(
                     value = template.name,
-                    onValueChange = { dispatch(ScreenAction.SetExerciseTemplateName(it)) })
-                Row {
+                    onValueChange = { dispatch(ScreenAction.SetExerciseTemplateName(it)) },
+                    label = { Text("Name") },
+                    placeholder = { Text("e.g. Bench press") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     for (field in setDataFields) {
-                        Button(onClick = { dispatch(ScreenAction.ToggleExerciseTemplateField(field)) }) {
-                            Text(field.name)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                        ) {
+                            Checkbox(checked = field in template.fields, onCheckedChange = {
+                                dispatch(ScreenAction.ToggleExerciseTemplateField(field))
+                            })
+                            Text(text = "${field.name} (${field.unit})", fontSize = 20.sp)
                         }
                     }
                 }
-                Button(onClick = { saveExerciseTemplate(template, dispatch) }) {
+                Spacer(modifier = Modifier.weight(1f))
+                Button(
+                    onClick = { saveExerciseTemplate(template, dispatch) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
                     Text("Save")
                 }
             }
@@ -52,6 +75,6 @@ fun EditExerciseTemplateScreen(
 }
 
 fun saveExerciseTemplate(template: ExerciseTemplate, dispatch: Dispatch) {
-    dispatch(AddExerciseTemplate(template))
+    dispatch(AddOrUpdateExerciseTemplate(template))
     dispatch(doNavigateBack())
 }

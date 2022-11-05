@@ -27,7 +27,7 @@ sealed class Screen {
     object PickExercise : Screen()
 
     @Serializable
-    data class EditExercise(val exercise: Exercise) : Screen()
+    data class EditExercise(val exerciseIndex: Int) : Screen()
 }
 
 /**

@@ -1,8 +1,8 @@
 package com.oggtechnologies.orkout.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
@@ -11,8 +11,11 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.example.gshop.redux.AsyncThunk
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -25,7 +28,7 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Active Workout")
+                    Text("Active Workout")
                 },
                 navigationIcon = {
                     BackButton(dispatch)
@@ -33,8 +36,11 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                 actions = {
                     SimpleStringOverflowMenu {
                         "Cancel Workout" does {
-                            dispatch(doNavigateBack())
-                            dispatch(SetActiveWorkout(null))
+                            dispatch(AsyncThunk { _, _ ->
+                                delay(SCREEN_CHANGE_DELAY)
+                                dispatch(NavAction.Back)
+                                dispatch(SetActiveWorkout(null))
+                            })
                         }
                     }
                 }
@@ -52,7 +58,8 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                         )
                     }"
                 )
-                PerformedExercisesList(activeWorkout, state, dispatch)
+                PerformedExercisesList(activeWorkout, state, dispatch, modifier = Modifier.height(0.dp).weight(1f))
+                AddExerciseButton(dispatch)
                 FinishWorkoutButton(activeWorkout, state, dispatch)
             }
         }
@@ -60,11 +67,30 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
 }
 
 @Composable
-private fun PerformedExercisesList(activeWorkout: Workout, state: State, dispatch: Dispatch) {
-    LazyColumn {
-        itemsWithDividers(activeWorkout.exercises) { exercise ->
-            Text(text = exercise.name)
+private fun PerformedExercisesList(activeWorkout: Workout, state: State, dispatch: Dispatch, modifier: Modifier = Modifier) {
+    LazyColumn(modifier = modifier) {
+        itemsIndexedWithDividers(activeWorkout.exercises) { index, exercise ->
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth().clickable {
+                    dispatch(doNavigateTo(Screen.EditExercise(index)))
+                }.padding(20.dp)
+            ) {
+                Text(exercise.name)
+                Text("${exercise.sets.size} sets")
+            }
         }
+    }
+}
+
+@Composable
+private fun AddExerciseButton(dispatch: Dispatch) {
+    Button(
+        onClick = {
+            dispatch(doNavigateTo(Screen.PickExercise))
+        }
+    ) {
+        Text(text = "Add Exercise")
     }
 }
 
@@ -72,9 +98,12 @@ private fun PerformedExercisesList(activeWorkout: Workout, state: State, dispatc
 private fun FinishWorkoutButton(activeWorkout: Workout, state: State, dispatch: Dispatch) {
     Button(
         onClick = {
-            dispatch(doNavigateHome())
-            dispatch(AddWorkoutToHistory(activeWorkout))
-            dispatch(SetActiveWorkout(null))
+            dispatch(AsyncThunk { _, _ ->
+                delay(SCREEN_CHANGE_DELAY)
+                dispatch(NavAction.Home)
+                dispatch(AddWorkoutToHistory(activeWorkout))
+                dispatch(SetActiveWorkout(null))
+            })
         }
     ) {
         Text(text = "Finish Workout")

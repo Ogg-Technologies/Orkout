@@ -5,9 +5,10 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import com.oggtechnologies.orkout.model.store.AddExercise
 import com.oggtechnologies.orkout.model.store.State
-import com.oggtechnologies.orkout.model.store.Workout
 import com.oggtechnologies.orkout.model.store.doNavigateBack
+import com.oggtechnologies.orkout.model.store.doStartExercise
 import com.oggtechnologies.orkout.redux.Dispatch
 
 @Composable
@@ -19,7 +20,7 @@ fun PickExerciseScreen(state: State, dispatch: Dispatch) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Pick Exercise")
+                    Text("Pick Exercise")
                 },
                 navigationIcon = {
                     BackButton(dispatch)
@@ -27,7 +28,10 @@ fun PickExerciseScreen(state: State, dispatch: Dispatch) {
             )
         },
         content = {
-            Text(text = "Pick Exercise")
+            ExerciseTemplatesListView(state.exerciseTemplates, onItemClick = {
+                dispatch(doStartExercise(it))
+                dispatch(doNavigateBack())
+            })
         }
     )
 }
