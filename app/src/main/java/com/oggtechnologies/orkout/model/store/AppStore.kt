@@ -50,10 +50,21 @@ fun activeWorkoutReducer(activeWorkout: Workout?, action: ActiveWorkoutAction): 
 fun exercisesReducer(exercises: List<Exercise>, action: ActiveWorkoutAction): List<Exercise> = when (action) {
     is AddExercise -> exercises + action.exercise
     is RemoveExercise -> exercises.remove(action.exerciseIndex)
-    is AddSet -> exercises.edit(action.exerciseIndex) { it.copy(sets = it.sets + action.set) }
+    is NewSet -> exercises.edit(action.exerciseIndex) { it.copy(sets = it.sets + newSetFrom(it.sets)) }
     is EditSet -> exercises.edit(action.exerciseIndex) { it.copy(sets = it.sets.set(action.setIndex, action.set)) }
     is RemoveSet -> exercises.edit(action.exerciseIndex) { it.copy(sets = it.sets.remove(action.set)) }
     else -> exercises
+}
+
+fun newSetFrom(sets: List<ExerciseSet>): ExerciseSet {
+    if (sets.isEmpty()) return ExerciseSet()
+    val lastSet = sets.last()
+    return ExerciseSet(
+        weight = lastSet.weight,
+        reps = lastSet.reps,
+        time = lastSet.time,
+        distance = lastSet.distance,
+    )
 }
 
 fun rootReducer(state: State, action: Action): State = when (action) {

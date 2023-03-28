@@ -46,7 +46,7 @@ val SetDataField.name
 val SetDataField.unit
     get() = when (this) {
         is SetDataField.Weight -> "kg"
-        is SetDataField.Reps -> "reps"
+        is SetDataField.Reps -> "nr"
         is SetDataField.Time -> "s"
         is SetDataField.Distance -> "m"
     }
@@ -77,10 +77,10 @@ val Exercise?.name: String get() = this.template?.name ?: "Unknown exercise"
 
 @Serializable
 data class ExerciseSet(
-    val weight: Double? = null,
-    val reps: Int? = null,
-    val time: Int? = null,
-    val distance: Double? = null,
+    val weight: Double? = null, // kg
+    val reps: Int? = null, // reps
+    val time: Int? = null, // s
+    val distance: Double? = null, // m
 )
 
 @Serializable
@@ -119,7 +119,7 @@ fun doStartExercise(exerciseTemplate: ExerciseTemplate): ActiveWorkoutAction {
 
 data class RemoveExercise(val exerciseIndex: Int) : ActiveWorkoutAction()
 
-data class AddSet(val exerciseIndex: Int, val set: ExerciseSet) : ActiveWorkoutAction()
+data class NewSet(val exerciseIndex: Int) : ActiveWorkoutAction()
 
 data class EditSet(val exerciseIndex: Int, val setIndex: Int, val set: ExerciseSet) :
     ActiveWorkoutAction()

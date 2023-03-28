@@ -6,6 +6,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -57,7 +61,7 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
                     }
                 }
                 Button(onClick = {
-                    addSet(screen.exerciseIndex, dispatch)
+                    dispatch(NewSet(screen.exerciseIndex))
                 }) {
                     Text("Add set");
                 }
@@ -85,34 +89,72 @@ fun SetView(
             }
         }
         for (field in template.fields) {
-            TextField(
-                value = when (field) {
-                    is SetDataField.Reps -> set.reps
-                    is SetDataField.Weight -> set.weight
-                    is SetDataField.Time -> set.time
-                    is SetDataField.Distance -> set.distance
-                }?.toString() ?: "",
-                onValueChange = {
-                    edit(
-                        when (field) {
-                            is SetDataField.Reps -> set.copy(reps = it.toIntOrNull())
-                            is SetDataField.Weight -> set.copy(weight = it.toDoubleOrNull())
-                            is SetDataField.Time -> set.copy(time = it.toIntOrNull())
-                            is SetDataField.Distance -> set.copy(distance = it.toDoubleOrNull())
-                        }
-                    )
-                },
-                label = { Text(field.name) },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Next
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+            when (field) {
+                is SetDataField.Reps -> DataFieldInt(field, set.reps)
+                { edit(set.copy(reps = it)) }
+                is SetDataField.Weight -> DataFieldDouble(field, set.weight)
+                { edit(set.copy(weight = it)) }
+                is SetDataField.Time -> DataFieldInt(field, set.time)
+                { edit(set.copy(time = it)) }
+                is SetDataField.Distance -> DataFieldDouble(field, set.distance)
+                { edit(set.copy(distance = it)) }
+            }
         }
     }
 }
 
-fun addSet(exerciseIndex: Int, dispatch: Dispatch) {
-    dispatch(AddSet(exerciseIndex, ExerciseSet()))
+@Composable
+fun DataFieldDouble(
+    field: SetDataField,
+    value: Double?,
+    edit: (Double?) -> Unit
+) {
+    val str = value?.let {
+        if (it % 1 == 0.0) {
+            it.toInt().toString()
+        } else {
+            it.toString()
+        }
+    } ?: ""
+    var text: String by remember { mutableStateOf(str) }
+    DataField(
+        value = text,
+        onValueChange = { newString ->
+            if (newString.isEmpty() || newString.toDoubleOrNull() != null) {
+                text = newString
+                edit(newString.toDoubleOrNull())
+            }
+        },
+        field = field,
+    )
 }
+
+@Composable
+fun DataFieldInt(
+    field: SetDataField,
+    value: Int?,
+    edit: (Int?) -> Unit
+) {
+    DataField(
+        value = value?.toString() ?: "",
+        onValueChange = { newString ->
+            if (newString.isEmpty()) edit(null) else newString.toIntOrNull()?.let { edit(it) }
+        },
+        field = field,
+    )
+}
+
+@Composable
+fun DataField(value: String, field: SetDataField, onValueChange: (String) -> Unit) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text("${field.name} (${field.unit})") },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Next
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
