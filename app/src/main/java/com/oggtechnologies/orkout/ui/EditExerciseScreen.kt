@@ -1,9 +1,7 @@
 package com.oggtechnologies.orkout.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -13,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 
@@ -50,7 +49,7 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
                         .fillMaxWidth()
                 ) {
                     itemsIndexedWithDividers(exercise.sets) { setIndex, set ->
-                        SetView(set, template, edit = { newSet ->
+                        SetView(setIndex, set, template, edit = { newSet ->
                             dispatch(EditSet(screen.exerciseIndex, setIndex, newSet))
                         }, remove = {
                             dispatch(RemoveSet(screen.exerciseIndex, setIndex))
@@ -69,12 +68,22 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
 
 @Composable
 fun SetView(
+    setIndex: Int,
     set: ExerciseSet,
     template: ExerciseTemplate,
     edit: (ExerciseSet) -> Unit,
     remove: () -> Unit
 ) {
-    Column {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("${setIndex + 1}", fontSize = 20.sp)
+            Spacer(modifier = Modifier.weight(1f))
+            Button(onClick = {
+                remove()
+            }) {
+                Text("Delete set");
+            }
+        }
         for (field in template.fields) {
             TextField(
                 value = when (field) {
@@ -98,12 +107,8 @@ fun SetView(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Next
                 ),
+                modifier = Modifier.fillMaxWidth()
             )
-        }
-        Button(onClick = {
-            remove()
-        }) {
-            Text("Delete set");
         }
     }
 }

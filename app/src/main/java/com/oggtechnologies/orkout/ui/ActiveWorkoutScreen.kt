@@ -4,11 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Button
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,7 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
     BackHandler {
         dispatch(doNavigateBack())
     }
+    var confirmDialogState: ConfirmationDialogState? by remember { mutableStateOf(null) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -36,17 +38,37 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                 actions = {
                     SimpleStringOverflowMenu {
                         "Cancel Workout" does {
-                            dispatch(AsyncThunk { _, _ ->
-                                delay(SCREEN_CHANGE_DELAY)
-                                dispatch(NavAction.Back)
-                                dispatch(SetActiveWorkout(null))
-                            })
+                            confirmDialogState = ConfirmationDialogState("Are you sure you want to cancel the workout?") {
+                                dispatch(AsyncThunk { _, _ ->
+                                    delay(SCREEN_CHANGE_DELAY)
+                                    dispatch(NavAction.Back)
+                                    dispatch(SetActiveWorkout(null))
+                                })
+                            }
+                        }
+                        "Finish Workout" does {
+                            confirmDialogState = ConfirmationDialogState("Are you sure you want to finish?") {
+                                dispatch(AsyncThunk { _, _ ->
+                                    delay(SCREEN_CHANGE_DELAY)
+                                    dispatch(NavAction.Home)
+                                    dispatch(AddWorkoutToHistory(activeWorkout))
+                                    dispatch(SetActiveWorkout(null))
+                                })
+                            }
                         }
                     }
                 }
             )
         },
         content = {
+            confirmDialogState?.let {
+                ConfirmationDialog(title = it.title,
+                    onConfirm = { it.onConfirm(); confirmDialogState = null },
+                    onDismiss = { confirmDialogState = null }
+                )
+            }
+
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
@@ -58,26 +80,44 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                         )
                     }"
                 )
-                PerformedExercisesList(activeWorkout, state, dispatch, modifier = Modifier.height(0.dp).weight(1f))
+                PerformedExercisesList(
+                    activeWorkout, state, dispatch, modifier = Modifier
+                        .height(0.dp)
+                        .weight(1f)
+                )
                 AddExerciseButton(dispatch)
-                FinishWorkoutButton(activeWorkout, state, dispatch)
             }
         }
     )
 }
 
 @Composable
-private fun PerformedExercisesList(activeWorkout: Workout, state: State, dispatch: Dispatch, modifier: Modifier = Modifier) {
+private fun PerformedExercisesList(
+    activeWorkout: Workout,
+    state: State,
+    dispatch: Dispatch,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(modifier = modifier) {
         itemsIndexedWithDividers(activeWorkout.exercises) { index, exercise ->
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth().clickable {
-                    dispatch(doNavigateTo(Screen.EditExercise(index)))
-                }.padding(20.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        dispatch(doNavigateTo(Screen.EditExercise(index)))
+                    }
+                    .padding(18.dp)
             ) {
                 Text(exercise.name)
+                Spacer(modifier = Modifier.weight(1f))
                 Text("${exercise.sets.size} sets")
+                Spacer(modifier = Modifier.width(16.dp))
+                SimpleStringOverflowMenu {
+                    "Delete" does {
+                        dispatch(RemoveExercise(index))
+                    }
+                }
             }
         }
     }
@@ -94,18 +134,29 @@ private fun AddExerciseButton(dispatch: Dispatch) {
     }
 }
 
+data class ConfirmationDialogState(
+    val title: String,
+    val onConfirm: () -> Unit,
+)
+
 @Composable
-private fun FinishWorkoutButton(activeWorkout: Workout, state: State, dispatch: Dispatch) {
-    Button(
-        onClick = {
-            dispatch(AsyncThunk { _, _ ->
-                delay(SCREEN_CHANGE_DELAY)
-                dispatch(NavAction.Home)
-                dispatch(AddWorkoutToHistory(activeWorkout))
-                dispatch(SetActiveWorkout(null))
-            })
+private fun ConfirmationDialog(
+    title: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("No")
+            }
         }
-    ) {
-        Text(text = "Finish Workout")
-    }
+    )
 }
