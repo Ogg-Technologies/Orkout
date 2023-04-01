@@ -1,6 +1,5 @@
 package com.oggtechnologies.orkout.model.store
 
-import com.example.gshop.redux.Thunk
 import com.oggtechnologies.orkout.redux.Action
 import kotlinx.serialization.Serializable
 

@@ -1,7 +1,8 @@
 package com.oggtechnologies.orkout.model.store
 
-import com.example.gshop.redux.Thunk
+import com.oggtechnologies.orkout.redux.Thunk
 import com.oggtechnologies.orkout.model.database.DBView
+import com.oggtechnologies.orkout.model.database.WorkoutTimes
 import com.oggtechnologies.orkout.redux.Action
 import kotlinx.serialization.Serializable
 
@@ -65,7 +66,6 @@ data class WorkoutTemplate(
     val suggestedExercises: List<ExerciseTemplate>,
 )
 
-@Serializable
 data class Exercise(
     val id: Int,
     val templateId: Int,
@@ -75,16 +75,14 @@ data class Exercise(
 val Exercise?.template: ExerciseTemplate? get() = if (this == null) null else appStore.state.exerciseTemplates.find { it.id == templateId }
 val Exercise?.name: String get() = this.template?.name ?: "Unknown exercise"
 
-@Serializable
 data class ExerciseSet(
     val id: Int,
     val weight: Double? = null, // kg
-    val reps: Int? = null, // reps
+    val reps: Int? = null, // nr
     val time: Int? = null, // s
     val distance: Double? = null, // m
 )
 
-@Serializable
 data class Workout(
     val id: Int,
     val templateId: Int,
@@ -109,7 +107,12 @@ fun doStartWorkout() = Thunk { state, dispatch ->
 
 data class SetActiveWorkoutId(val id: Int?) : Action
 
-sealed class WorkoutAction : Action
+fun doFinishActiveWorkout() = Thunk { state, dispatch ->
+    state.activeWorkout?.let { workout ->
+        dispatch(SetActiveWorkoutId(null))
+        DBView.setWorkoutTimes(workout.id, workout.startTime, System.currentTimeMillis())
+    }
+}
 
 fun doAddWorkout(workout: Workout) = Thunk { _, _  ->
     DBView.addWorkout(workout)

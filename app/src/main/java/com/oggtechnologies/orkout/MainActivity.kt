@@ -4,24 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.lifecycleScope
-import com.oggtechnologies.orkout.model.Database
+import com.oggtechnologies.orkout.model.database.JsonDatabase
 import com.oggtechnologies.orkout.model.database.DBView
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 import com.oggtechnologies.orkout.ui.*
 import com.oggtechnologies.orkout.ui.theme.OrkoutTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -51,12 +44,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun tryLoadSavedState() {
-        val savedJsonState = Database.readJsonState() ?: return
-        try {
-            val state = Json.decodeFromString(State.serializer(), savedJsonState)
-            appStore.dispatch(SetState(state))
-        } catch (e: Exception) {
-        }
+        val savedState = JsonDatabase.readRelevantState() ?: return
+        appStore.dispatch(SetState(savedState))
     }
 }
 

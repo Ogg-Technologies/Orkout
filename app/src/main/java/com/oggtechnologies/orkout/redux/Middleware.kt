@@ -1,17 +1,11 @@
-package com.example.gshop.redux
+package com.oggtechnologies.orkout.redux
 
-import com.oggtechnologies.orkout.model.Database
+import com.oggtechnologies.orkout.model.database.JsonDatabase
 import com.oggtechnologies.orkout.model.store.State
-import com.oggtechnologies.orkout.redux.Action
-import com.oggtechnologies.orkout.redux.Dispatch
-import com.oggtechnologies.orkout.redux.Middleware
-import com.oggtechnologies.orkout.redux.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 val Action.name: String
     get() = try {
@@ -22,14 +16,13 @@ val Action.name: String
     }
 
 val loggerMiddleware: Middleware<State> = { store, next, action ->
-    println("New action: ${action.name} -> ${Json.encodeToString(store.state)}")
+    println("New action: ${action.name}")
     next(action)
 }
 
 val persistentStorageMiddleware: Middleware<State> = { store, next, action ->
     next(action)
-    val jsonState = Json.encodeToString(store.state)
-    Database.writeJsonState(jsonState)
+    JsonDatabase.saveRelevantState(store.state)
 }
 
 /**

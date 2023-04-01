@@ -1,6 +1,6 @@
 package com.oggtechnologies.orkout.model.store
 
-import com.example.gshop.redux.AsyncThunk
+import com.oggtechnologies.orkout.redux.AsyncThunk
 import com.oggtechnologies.orkout.redux.Action
 import kotlinx.coroutines.delay
 import java.util.*

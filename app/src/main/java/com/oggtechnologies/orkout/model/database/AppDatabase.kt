@@ -124,14 +124,14 @@ interface AppDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertSet(set: SetEntity)
 
-    @Delete
-    fun deleteWorkout(workout: WorkoutEntity)
+    @Query("DELETE FROM WorkoutEntity WHERE id = :id")
+    fun deleteWorkout(id: Int)
 
-    @Delete
-    fun deleteExercise(exercise: ExerciseEntity)
+    @Query("DELETE FROM ExerciseEntity WHERE id = :id")
+    fun deleteExercise(id: Int)
 
-    @Delete
-    fun deleteSet(set: SetEntity)
+    @Query("DELETE FROM SetEntity WHERE id = :id")
+    fun deleteSet(id: Int)
 
     @Update(entity = WorkoutEntity::class)
     fun updateWorkoutTimes(workoutTimes: WorkoutTimes)

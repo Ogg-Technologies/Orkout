@@ -53,11 +53,9 @@ object DBView {
                     workoutTemplate = null,
                 )
             )
-            /*
             workout.exercises.forEachIndexed { exerciseIndex, exercise ->
                 addExercise(workout.id, exerciseIndex, exercise)
             }
-             */
         }
     }
 
@@ -72,17 +70,7 @@ object DBView {
                 )
             )
             exercise.sets.forEachIndexed { index, set ->
-                App.db.appDao().insertSet(
-                    SetEntity(
-                        id = set.id,
-                        index = index,
-                        exercise = exercise.id,
-                        weight = set.weight,
-                        reps = set.reps,
-                        time = set.time,
-                        distance = set.distance,
-                    )
-                )
+                addSet(exercise.id, index, set)
             }
         }
     }
@@ -105,43 +93,19 @@ object DBView {
 
     fun removeWorkout(workoutId: Int) {
         MainScope().launch(Dispatchers.IO) {
-            App.db.appDao().deleteWorkout(
-                WorkoutEntity(
-                    id = workoutId,
-                    startTime = 0,
-                    endTime = null,
-                    workoutTemplate = null,
-                )
-            )
+            App.db.appDao().deleteWorkout(workoutId)
         }
     }
 
     fun removeExercise(exerciseId: Int) {
         MainScope().launch(Dispatchers.IO) {
-            App.db.appDao().deleteExercise(
-                ExerciseEntity(
-                    id = exerciseId,
-                    index = 0,
-                    workout = 0,
-                    exerciseTemplate = 0,
-                )
-            )
+            App.db.appDao().deleteExercise(exerciseId)
         }
     }
 
     fun removeSet(setId: Int) {
         MainScope().launch(Dispatchers.IO) {
-            App.db.appDao().deleteSet(
-                SetEntity(
-                    id = setId,
-                    index = 0,
-                    exercise = 0,
-                    weight = null,
-                    reps = null,
-                    time = null,
-                    distance = null,
-                )
-            )
+            App.db.appDao().deleteSet(setId)
         }
     }
 

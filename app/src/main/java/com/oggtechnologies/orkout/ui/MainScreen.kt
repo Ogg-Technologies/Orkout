@@ -12,7 +12,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.gshop.redux.AsyncThunk
+import com.oggtechnologies.orkout.redux.AsyncThunk
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 import kotlinx.coroutines.delay

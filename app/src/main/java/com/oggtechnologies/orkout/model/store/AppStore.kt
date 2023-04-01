@@ -1,10 +1,7 @@
 package com.oggtechnologies.orkout.model.store
 
-import com.example.gshop.redux.*
 import com.oggtechnologies.orkout.model.database.DBView
-import com.oggtechnologies.orkout.redux.Action
-import com.oggtechnologies.orkout.redux.Store
-import kotlinx.serialization.Serializable
+import com.oggtechnologies.orkout.redux.*
 
 val appStore = Store(
     initialState = State(),
@@ -16,7 +13,6 @@ val appStore = Store(
     )
 )
 
-@Serializable
 data class State(
     val activeWorkoutId: Int? = null,
     val navigationStack: NavigationStack = listOf(Screen.Main),
@@ -30,8 +26,6 @@ val State.activeWorkout: Workout?
 
 data class SetState(val state: State) : Action
 
-data class AddWorkoutToHistory(val workout: Workout) : Action
-
 fun doAddOrUpdateExerciseTemplate(exerciseTemplate: ExerciseTemplate) = Thunk { _, _ ->
     DBView.addOrUpdateExerciseTemplate(exerciseTemplate)
 }
@@ -39,25 +33,6 @@ fun doAddOrUpdateExerciseTemplate(exerciseTemplate: ExerciseTemplate) = Thunk { 
 data class SetExerciseTemplates(val exerciseTemplates: List<ExerciseTemplate>) : Action
 
 data class SetWorkoutHistory(val workoutHistory: List<Workout>) : Action
-
-/*
-fun activeWorkoutReducer(activeWorkout: Workout?, action: WorkoutAction): Workout? {
-    if (action is SetActiveWorkout) return action.workout
-    if (activeWorkout == null) return null
-    return activeWorkout.copy(exercises = exercisesReducer(activeWorkout.exercises, action))
-}
- */
-
-/*
-fun exercisesReducer(exercises: List<Exercise>, action: WorkoutAction): List<Exercise> = when (action) {
-    is AddExercise -> exercises + action.exercise
-    is RemoveExercise -> exercises.remove(action.exerciseIndex)
-    is NewSet -> exercises.edit(action.exerciseIndex) { it.copy(sets = it.sets + newSetFrom(it.sets)) }
-    is EditSet -> exercises.edit(action.exerciseIndex) { it.copy(sets = it.sets.set(action.setIndex, action.set)) }
-    is RemoveSet -> exercises.edit(action.exerciseIndex) { it.copy(sets = it.sets.remove(action.set)) }
-    else -> exercises
-}
- */
 
 fun rootReducer(state: State, action: Action): State = when (action) {
     is SetState -> action.state
@@ -73,7 +48,6 @@ fun rootReducer(state: State, action: Action): State = when (action) {
     is ScreenAction -> state.copy(navigationStack = state.navigationStack.editLast {
         screenReducer(it, action)
     })
-    //is AddWorkoutToHistory -> state.copy(workoutHistory = state.workoutHistory + action.workout)
     else -> state
 }
 

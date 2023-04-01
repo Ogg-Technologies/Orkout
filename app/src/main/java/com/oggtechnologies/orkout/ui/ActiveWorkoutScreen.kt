@@ -13,7 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.gshop.redux.AsyncThunk
+import com.oggtechnologies.orkout.redux.AsyncThunk
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 import kotlinx.coroutines.delay
@@ -52,7 +52,7 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                                 dispatch(AsyncThunk { _, _ ->
                                     delay(SCREEN_CHANGE_DELAY)
                                     dispatch(NavAction.Home)
-                                    dispatch(SetActiveWorkoutId(null))
+                                    dispatch(doFinishActiveWorkout())
                                 })
                             }
                         }
