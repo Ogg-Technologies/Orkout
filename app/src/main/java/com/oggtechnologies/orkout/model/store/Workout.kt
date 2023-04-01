@@ -1,15 +1,14 @@
 package com.oggtechnologies.orkout.model.store
 
 import com.example.gshop.redux.Thunk
+import com.oggtechnologies.orkout.model.database.DBView
 import com.oggtechnologies.orkout.redux.Action
 import kotlinx.serialization.Serializable
-
-typealias ID = Int
 
 @Serializable
 data class ExerciseTemplate(
     val name: String,
-    val id: ID,
+    val id: Int,
     val fields: List<SetDataField>,
 )
 
@@ -62,13 +61,14 @@ val SetDataField.key
 @Serializable
 data class WorkoutTemplate(
     val name: String,
-    val id: ID,
+    val id: Int,
     val suggestedExercises: List<ExerciseTemplate>,
 )
 
 @Serializable
 data class Exercise(
-    val templateId: ID,
+    val id: Int,
+    val templateId: Int,
     val sets: List<ExerciseSet>,
 )
 
@@ -77,6 +77,7 @@ val Exercise?.name: String get() = this.template?.name ?: "Unknown exercise"
 
 @Serializable
 data class ExerciseSet(
+    val id: Int,
     val weight: Double? = null, // kg
     val reps: Int? = null, // reps
     val time: Int? = null, // s
@@ -85,7 +86,8 @@ data class ExerciseSet(
 
 @Serializable
 data class Workout(
-    val templateId: ID,
+    val id: Int,
+    val templateId: Int,
     val startTime: Long,
     val endTime: Long?,
     val exercises: List<Exercise>,
@@ -93,36 +95,75 @@ data class Workout(
 
 fun doStartWorkout() = Thunk { state, dispatch ->
     val workout = Workout(
+        id = generateId(),
         templateId = 0,
         startTime = System.currentTimeMillis(),
         endTime = null,
         exercises = emptyList(),
     )
     if (state.activeWorkout == null) {
-        dispatch(SetActiveWorkout(workout))
+        dispatch(doAddWorkout(workout))
+        dispatch(SetActiveWorkoutId(workout.id))
     }
 }
 
-sealed class ActiveWorkoutAction : Action
+data class SetActiveWorkoutId(val id: Int?) : Action
 
-data class SetActiveWorkout(val workout: Workout?) : ActiveWorkoutAction()
+sealed class WorkoutAction : Action
 
-data class AddExercise(val exercise: Exercise) : ActiveWorkoutAction()
+fun doAddWorkout(workout: Workout) = Thunk { _, _  ->
+    DBView.addWorkout(workout)
+}
 
-fun doStartExercise(exerciseTemplate: ExerciseTemplate): ActiveWorkoutAction {
-    val exercise = Exercise(
+fun doRemoveWorkout(workoutId: Int) = Thunk { _, _  ->
+    DBView.removeWorkout(workoutId)
+}
+
+fun doAddExercise(workoutId: Int, exercise: Exercise) = Thunk { state, _  ->
+    // TODO: refactor this to find the index some other way
+    state.workoutHistory.find { it.id == workoutId }!!.let {workout ->
+        DBView.addExercise(workoutId, workout.exercises.size, exercise)
+    }
+}
+
+fun doStartExercise(workoutId: Int, exerciseTemplate: ExerciseTemplate) = doAddExercise(
+    workoutId,
+    Exercise(
+        id = generateId(),
         templateId = exerciseTemplate.id,
         sets = emptyList(),
     )
-    return AddExercise(exercise)
+)
+
+fun doRemoveExercise(exerciseId: Int) = Thunk { _, _  ->
+    DBView.removeExercise(exerciseId)
 }
 
-data class RemoveExercise(val exerciseIndex: Int) : ActiveWorkoutAction()
+private fun newSetFrom(sets: List<ExerciseSet>): ExerciseSet {
+    if (sets.isEmpty()) return ExerciseSet(generateId())
+    val lastSet = sets.last()
+    return ExerciseSet(
+        id = generateId(),
+        weight = lastSet.weight,
+        reps = lastSet.reps,
+        time = lastSet.time,
+        distance = lastSet.distance,
+    )
+}
 
-data class NewSet(val exerciseIndex: Int) : ActiveWorkoutAction()
+fun doNewSet(workoutId: Int, exerciseIndex: Int) = Thunk { state, _  ->
+    state.workoutHistory.find { it.id == workoutId }!!.let {workout ->
+        workout.exercises[exerciseIndex].let {exercise ->
+            DBView.addSet(exercise.id, exercise.sets.size, newSetFrom(exercise.sets))
+        }
+    }
+}
 
-data class EditSet(val exerciseIndex: Int, val setIndex: Int, val set: ExerciseSet) :
-    ActiveWorkoutAction()
+fun doEditSet(exerciseId: Int, setIndex: Int, set: ExerciseSet) = Thunk { _, _  ->
+    DBView.editSet(exerciseId, setIndex, set)
+}
 
-data class RemoveSet(val exerciseIndex: Int, val set: Int) : ActiveWorkoutAction()
+fun doRemoveSet(setId: Int) = Thunk { _, _  ->
+    DBView.removeSet(setId)
+}
 

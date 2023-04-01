@@ -5,7 +5,7 @@ import com.oggtechnologies.orkout.redux.Action
 import kotlinx.coroutines.delay
 import java.util.*
 
-fun generateId(): ID = UUID.randomUUID().leastSignificantBits.toInt()
+fun generateId(): Int = UUID.randomUUID().leastSignificantBits.toInt()
 
 fun doDelayedDispatch(
     action: Action,

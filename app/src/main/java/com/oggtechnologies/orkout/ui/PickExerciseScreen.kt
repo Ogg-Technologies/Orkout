@@ -5,7 +5,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
-import com.oggtechnologies.orkout.model.store.AddExercise
 import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.model.store.doNavigateBack
 import com.oggtechnologies.orkout.model.store.doStartExercise
@@ -29,7 +28,7 @@ fun PickExerciseScreen(state: State, dispatch: Dispatch) {
         },
         content = {
             ExerciseTemplatesListView(state.exerciseTemplates, onItemClick = {
-                dispatch(doStartExercise(it))
+                dispatch(doStartExercise(state.activeWorkoutId!!, it))
                 dispatch(doNavigateBack())
             })
         }

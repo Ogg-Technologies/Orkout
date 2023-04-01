@@ -42,7 +42,8 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                                 dispatch(AsyncThunk { _, _ ->
                                     delay(SCREEN_CHANGE_DELAY)
                                     dispatch(NavAction.Back)
-                                    dispatch(SetActiveWorkout(null))
+                                    dispatch(doRemoveWorkout(activeWorkout.id))
+                                    dispatch(SetActiveWorkoutId(null))
                                 })
                             }
                         }
@@ -51,8 +52,7 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                                 dispatch(AsyncThunk { _, _ ->
                                     delay(SCREEN_CHANGE_DELAY)
                                     dispatch(NavAction.Home)
-                                    dispatch(AddWorkoutToHistory(activeWorkout))
-                                    dispatch(SetActiveWorkout(null))
+                                    dispatch(SetActiveWorkoutId(null))
                                 })
                             }
                         }
@@ -115,7 +115,7 @@ private fun PerformedExercisesList(
                 Spacer(modifier = Modifier.width(16.dp))
                 SimpleStringOverflowMenu {
                     "Delete" does {
-                        dispatch(RemoveExercise(index))
+                        dispatch(doRemoveExercise(exercise.id))
                     }
                 }
             }

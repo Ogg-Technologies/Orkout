@@ -8,8 +8,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.gshop.redux.AsyncThunk
+import com.oggtechnologies.orkout.App
+import com.oggtechnologies.orkout.model.database.AppDatabase
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun EditExerciseTemplateScreen(
@@ -75,6 +81,6 @@ fun EditExerciseTemplateScreen(
 }
 
 fun saveExerciseTemplate(template: ExerciseTemplate, dispatch: Dispatch) {
-    dispatch(AddOrUpdateExerciseTemplate(template))
+    dispatch(doAddOrUpdateExerciseTemplate(template))
     dispatch(doNavigateBack())
 }

@@ -13,4 +13,5 @@ object Database {
     fun readJsonState(): String? {
         return App.prefs.getString(STATE_KEY, null)
     }
+
 }

@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.room.Room
+import com.oggtechnologies.orkout.model.database.AppDatabase
 
 class App : Application() {
     override fun onCreate() {
@@ -25,6 +27,13 @@ class App : Application() {
         val prefs: SharedPreferences by lazy {
             context.getSharedPreferences("main",
                 Context.MODE_PRIVATE)
+        }
+
+        val db: AppDatabase by lazy {
+            Room.databaseBuilder(
+                context,
+                AppDatabase::class.java, "orkout.db"
+            ).build()
         }
     }
 }

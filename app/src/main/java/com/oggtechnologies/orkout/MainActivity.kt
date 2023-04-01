@@ -11,21 +11,42 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
 import com.oggtechnologies.orkout.model.Database
+import com.oggtechnologies.orkout.model.database.DBView
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 import com.oggtechnologies.orkout.ui.*
 import com.oggtechnologies.orkout.ui.theme.OrkoutTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         tryLoadSavedState()
+        setupDBConnection()
 
         setContent {
             val state: State by appStore.stateFlow.collectAsState()
             OrkoutApp(state, appStore.dispatch)
+        }
+    }
+
+    private fun setupDBConnection() {
+        MainScope().launch {
+            DBView.getExerciseTemplates().collect { exerciseTemplates ->
+                appStore.dispatch(SetExerciseTemplates(exerciseTemplates))
+            }
+        }
+        MainScope().launch {
+            DBView.getWorkouts().collect { workouts ->
+                appStore.dispatch(SetWorkoutHistory(workouts))
+            }
         }
     }
 
@@ -52,7 +73,7 @@ private fun OrkoutApp(state: State, dispatch: Dispatch) {
             )
             is Screen.WorkoutHistory -> WorkoutHistoryScreen(state, dispatch)
             is Screen.ActiveWorkout -> if (state.activeWorkout == null) ErrorScreen(dispatch) else ActiveWorkoutScreen(
-                state.activeWorkout,
+                state.activeWorkout!!,
                 state,
                 dispatch,
             )

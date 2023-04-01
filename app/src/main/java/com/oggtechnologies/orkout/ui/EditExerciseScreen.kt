@@ -54,14 +54,14 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
                 ) {
                     itemsIndexedWithDividers(exercise.sets) { setIndex, set ->
                         SetView(setIndex, set, template, edit = { newSet ->
-                            dispatch(EditSet(screen.exerciseIndex, setIndex, newSet))
+                            dispatch(doEditSet(exercise.id, setIndex, newSet))
                         }, remove = {
-                            dispatch(RemoveSet(screen.exerciseIndex, setIndex))
+                            dispatch(doRemoveSet(set.id))
                         })
                     }
                 }
                 Button(onClick = {
-                    dispatch(NewSet(screen.exerciseIndex))
+                    dispatch(doNewSet(state.activeWorkoutId!!, screen.exerciseIndex))
                 }) {
                     Text("Add set");
                 }

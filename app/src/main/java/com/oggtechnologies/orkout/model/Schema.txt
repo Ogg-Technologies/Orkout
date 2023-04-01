@@ -1,0 +1,23 @@
+Idea for the schema of the database:
+
+WorkoutTemplate(_name_)
+
+ExerciseTemplate(_name_, hasWeight, hasReps, hasTime, hasDistance)
+
+SuggestedExercise(_exerciseTemplate_, _workoutTemplate_, _index_)
+    _exerciseTemplate_ -> ExerciseTemplate._name_
+    _workoutTemplate_ -> WorkoutTemplate._name_
+
+Workout(_id_, startTime, endTime)
+
+OfWorkoutTemplate(_workout_, workoutTemplate)
+    workoutTemplate -> WorkoutTemplate._name_
+    _workout_ -> Workout._id_
+
+Exercise(_index_, _workout_, exerciseTemplate)
+    _workout_ -> Workout._id_
+    exerciseTemplate -> ExerciseTemplate._name_
+
+ExerciseSet(_index_, _exercise_, _workout_, weight, reps, time, distance)
+    _exercise_ -> Exercise._index_
+    _workout_ -> Workout._id_
