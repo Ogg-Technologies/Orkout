@@ -5,11 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -17,6 +13,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oggtechnologies.orkout.model.store.*
+import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.redux.Dispatch
 
 @Composable
@@ -61,9 +58,9 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
                     }
                 }
                 Button(onClick = {
-                    dispatch(doNewSet(state.activeWorkoutId!!, screen.exerciseIndex))
+                    dispatch(doNewSet(exercise))
                 }) {
-                    Text("Add set");
+                    Text("Add set")
                 }
             }
         }
@@ -85,7 +82,7 @@ fun SetView(
             Button(onClick = {
                 remove()
             }) {
-                Text("Delete set");
+                Text("Delete set")
             }
         }
         for (field in template.fields) {

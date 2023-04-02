@@ -53,34 +53,36 @@ object DBView {
                     workoutTemplate = null,
                 )
             )
-            workout.exercises.forEachIndexed { exerciseIndex, exercise ->
-                addExercise(workout.id, exerciseIndex, exercise)
+            workout.exercises.forEach { exercise ->
+                addExercise(workout.id, exercise)
             }
         }
     }
 
-    fun addExercise(workoutId: Int, exerciseIndex: Int, exercise: Exercise) {
+    fun addExercise(workoutId: Int, exercise: Exercise) {
         MainScope().launch(Dispatchers.IO) {
+            val exerciseIndex = App.db.appDao().getNextExerciseIndex(workoutId)
             App.db.appDao().insertExercise(
                 ExerciseEntity(
                     id = exercise.id,
-                    index = exerciseIndex,
+                    listIndex = exerciseIndex,
                     workout = workoutId,
                     exerciseTemplate = exercise.template!!.id,
                 )
             )
-            exercise.sets.forEachIndexed { index, set ->
-                addSet(exercise.id, index, set)
+            exercise.sets.forEach { set ->
+                addSet(exercise.id, set)
             }
         }
     }
 
-    fun addSet(exerciseId: Int, setIndex: Int, set: ExerciseSet) {
+    fun addSet(exerciseId: Int, set: ExerciseSet) {
         MainScope().launch(Dispatchers.IO) {
+            val setIndex = App.db.appDao().getNextSetIndex(exerciseId)
             App.db.appDao().insertSet(
                 SetEntity(
                     id = set.id,
-                    index = setIndex,
+                    listIndex = setIndex,
                     exercise = exerciseId,
                     weight = set.weight,
                     reps = set.reps,
@@ -126,7 +128,7 @@ object DBView {
             App.db.appDao().updateSet(
                 SetEntity(
                     id = set.id,
-                    index = setIndex,
+                    listIndex = setIndex,
                     exercise = exerciseId,
                     weight = set.weight,
                     reps = set.reps,
@@ -163,5 +165,28 @@ object DBView {
                 )
             }
         }.flowOn(Dispatchers.IO)
+    }
+}
+
+fun prepopulateData() {
+    infix fun String.has(fields: List<SetDataField>): ExerciseTemplate =
+        ExerciseTemplate(this, fields)
+
+    val exerciseTemplates = listOf(
+        "Bench press" has listOf(SetDataField.Weight, SetDataField.Reps),
+        "Squat" has listOf(SetDataField.Weight, SetDataField.Reps),
+        "Incline dumbbell press" has listOf(SetDataField.Weight, SetDataField.Reps),
+        "Machine chest flyes" has listOf(SetDataField.Weight, SetDataField.Reps),
+        "Dumbbell lateral raises" has listOf(SetDataField.Weight, SetDataField.Reps),
+        "Decline crunches" has listOf(SetDataField.Reps),
+        "Weighted hyperextensions" has listOf(SetDataField.Weight, SetDataField.Reps),
+        "Machine triceps extensions" has listOf(SetDataField.Weight, SetDataField.Reps),
+        "Machine biceps curls" has listOf(SetDataField.Weight, SetDataField.Reps),
+        "Plank" has listOf(SetDataField.Time),
+        "Treadmill running" has listOf(SetDataField.Time, SetDataField.Distance),
+    )
+
+    for (template in exerciseTemplates) {
+        DBView.addOrUpdateExerciseTemplate(template)
     }
 }

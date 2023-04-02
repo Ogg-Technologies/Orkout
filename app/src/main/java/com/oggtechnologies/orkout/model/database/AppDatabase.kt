@@ -76,7 +76,7 @@ data class WorkoutEntity(
 )
 data class ExerciseEntity(
     @PrimaryKey val id: Int,
-    val index: Int,
+    val listIndex: Int,
     val workout: Int,
     val exerciseTemplate: Int,
 )
@@ -93,7 +93,7 @@ data class ExerciseEntity(
 )
 data class SetEntity(
     @PrimaryKey val id: Int,
-    val index: Int,
+    val listIndex: Int,
     val exercise: Int,
     val weight: Double?,
     val reps: Int?,
@@ -112,7 +112,7 @@ interface AppDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertExerciseTemplate(exerciseTemplate: ExerciseTemplateEntity)
 
-    @Query("SELECT * FROM ExerciseTemplateEntity")
+    @Query("SELECT * FROM ExerciseTemplateEntity ORDER BY name")
     fun loadExerciseTemplates(): Flow<List<ExerciseTemplateEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -121,8 +121,14 @@ interface AppDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertExercise(exercise: ExerciseEntity)
 
+    @Query("SELECT MAX(listIndex)+1 FROM ExerciseEntity WHERE workout = :workoutId")
+    fun getNextExerciseIndex(workoutId: Int): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertSet(set: SetEntity)
+
+    @Query("SELECT MAX(listIndex)+1 FROM SetEntity WHERE exercise = :exerciseId")
+    fun getNextSetIndex(exerciseId: Int): Int
 
     @Query("DELETE FROM WorkoutEntity WHERE id = :id")
     fun deleteWorkout(id: Int)

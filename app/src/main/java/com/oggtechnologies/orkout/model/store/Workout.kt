@@ -1,16 +1,22 @@
 package com.oggtechnologies.orkout.model.store
 
-import com.oggtechnologies.orkout.redux.Thunk
 import com.oggtechnologies.orkout.model.database.DBView
-import com.oggtechnologies.orkout.model.database.WorkoutTimes
 import com.oggtechnologies.orkout.redux.Action
+import com.oggtechnologies.orkout.redux.Thunk
 import kotlinx.serialization.Serializable
+
+@Serializable
+data class WorkoutTemplate(
+    val name: String,
+    val suggestedExercises: List<ExerciseTemplate>,
+    val id: Int = generateId(),
+)
 
 @Serializable
 data class ExerciseTemplate(
     val name: String,
-    val id: Int,
     val fields: List<SetDataField>,
+    val id: Int = generateId(),
 )
 
 @Serializable
@@ -58,13 +64,6 @@ val SetDataField.key
         is SetDataField.Time -> "time"
         is SetDataField.Distance -> "distance"
     }
-
-@Serializable
-data class WorkoutTemplate(
-    val name: String,
-    val id: Int,
-    val suggestedExercises: List<ExerciseTemplate>,
-)
 
 data class Exercise(
     val id: Int,
@@ -123,10 +122,7 @@ fun doRemoveWorkout(workoutId: Int) = Thunk { _, _  ->
 }
 
 fun doAddExercise(workoutId: Int, exercise: Exercise) = Thunk { state, _  ->
-    // TODO: refactor this to find the index some other way
-    state.workoutHistory.find { it.id == workoutId }!!.let {workout ->
-        DBView.addExercise(workoutId, workout.exercises.size, exercise)
-    }
+    DBView.addExercise(workoutId, exercise)
 }
 
 fun doStartExercise(workoutId: Int, exerciseTemplate: ExerciseTemplate) = doAddExercise(
@@ -154,12 +150,8 @@ private fun newSetFrom(sets: List<ExerciseSet>): ExerciseSet {
     )
 }
 
-fun doNewSet(workoutId: Int, exerciseIndex: Int) = Thunk { state, _  ->
-    state.workoutHistory.find { it.id == workoutId }!!.let {workout ->
-        workout.exercises[exerciseIndex].let {exercise ->
-            DBView.addSet(exercise.id, exercise.sets.size, newSetFrom(exercise.sets))
-        }
-    }
+fun doNewSet(exercise: Exercise) = Thunk { state, _  ->
+    DBView.addSet(exercise.id, newSetFrom(exercise.sets))
 }
 
 fun doEditSet(exerciseId: Int, setIndex: Int, set: ExerciseSet) = Thunk { _, _  ->
