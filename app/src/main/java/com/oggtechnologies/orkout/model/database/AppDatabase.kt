@@ -145,6 +145,7 @@ interface AppDao {
     @Update
     fun updateSet(set: SetEntity)
 
+    @Transaction
     @Query("SELECT * FROM WorkoutEntity ORDER BY startTime DESC")
     fun loadFullWorkouts(): Flow<List<FullWorkout>>
 }

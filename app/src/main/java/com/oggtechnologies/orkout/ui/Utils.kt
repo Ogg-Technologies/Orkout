@@ -46,6 +46,43 @@ fun BackButton(dispatch: Dispatch) {
     }
 }
 
+private data class ConfirmationDialogState(
+    val title: String,
+    val onConfirm: () -> Unit,
+)
+
+class ConfirmationHandlerScope(
+    val showConfirmDialog: (title: String, onConfirm: () -> Unit) -> Unit,
+    val hideConfirmDialog: () -> Unit,
+)
+
+@Composable
+fun ConfirmationHandler(content: @Composable ConfirmationHandlerScope.() -> Unit) {
+    var confirmDialogState: ConfirmationDialogState? by remember { mutableStateOf(null) }
+    confirmDialogState?.let {
+        AlertDialog(
+            title = { Text(it.title) },
+            onDismissRequest = { confirmDialogState = null },
+            confirmButton = {
+                Button(onClick = { it.onConfirm(); confirmDialogState = null }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { confirmDialogState = null }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+    ConfirmationHandlerScope(
+        showConfirmDialog = { title, onConfirm ->
+            confirmDialogState = ConfirmationDialogState(title, onConfirm)
+        },
+        hideConfirmDialog = { confirmDialogState = null }
+    ).content()
+}
+
 @Composable
 fun SimpleStringOverflowMenu(
     content: SimpleStringOverflowMenuScope.() -> Unit,

@@ -4,28 +4,26 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.oggtechnologies.orkout.redux.AsyncThunk
 import com.oggtechnologies.orkout.model.store.*
+import com.oggtechnologies.orkout.redux.AsyncThunk
 import com.oggtechnologies.orkout.redux.Dispatch
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch) {
+fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch) = ConfirmationHandler {
     BackHandler {
         dispatch(doNavigateBack())
     }
-    var confirmDialogState: ConfirmationDialogState? by remember { mutableStateOf(null) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -38,7 +36,7 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                 actions = {
                     SimpleStringOverflowMenu {
                         "Cancel Workout" does {
-                            confirmDialogState = ConfirmationDialogState("Are you sure you want to cancel the workout?") {
+                            showConfirmDialog("Are you sure you want to cancel the workout?") {
                                 dispatch(AsyncThunk { _, _ ->
                                     delay(SCREEN_CHANGE_DELAY)
                                     dispatch(NavAction.Back)
@@ -48,7 +46,7 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                             }
                         }
                         "Finish Workout" does {
-                            confirmDialogState = ConfirmationDialogState("Are you sure you want to finish?") {
+                            showConfirmDialog("Are you sure you want to finish?") {
                                 dispatch(AsyncThunk { _, _ ->
                                     delay(SCREEN_CHANGE_DELAY)
                                     dispatch(NavAction.Home)
@@ -61,12 +59,6 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
             )
         },
         content = {
-            confirmDialogState?.let {
-                ConfirmationDialog(title = it.title,
-                    onConfirm = { it.onConfirm(); confirmDialogState = null },
-                    onDismiss = { confirmDialogState = null }
-                )
-            }
 
 
             Column(
@@ -132,31 +124,4 @@ private fun AddExerciseButton(dispatch: Dispatch) {
     ) {
         Text(text = "Add Exercise")
     }
-}
-
-data class ConfirmationDialogState(
-    val title: String,
-    val onConfirm: () -> Unit,
-)
-
-@Composable
-private fun ConfirmationDialog(
-    title: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Yes")
-            }
-        },
-        dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("No")
-            }
-        }
-    )
 }

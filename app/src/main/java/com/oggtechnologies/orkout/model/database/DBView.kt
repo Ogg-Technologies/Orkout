@@ -147,21 +147,22 @@ object DBView {
                     templateId = fullWorkout.fullWorkoutTemplate?.workoutTemplate?.id ?: 0,
                     startTime = fullWorkout.workout.startTime,
                     endTime = fullWorkout.workout.endTime,
-                    exercises = fullWorkout.fullExercises.map { fullExercise ->
-                        Exercise(
-                            id = fullExercise.exercise.id,
-                            templateId = fullExercise.exerciseTemplate.id,
-                            sets = fullExercise.sets.map { set ->
-                                ExerciseSet(
-                                    id = set.id,
-                                    weight = set.weight,
-                                    reps = set.reps,
-                                    time = set.time,
-                                    distance = set.distance,
-                                )
-                            }
-                        ).also { print(fullExercise.sets) }
-                    }
+                    exercises = fullWorkout.fullExercises.sortedBy { it.exercise.listIndex }
+                        .map { fullExercise ->
+                            Exercise(
+                                id = fullExercise.exercise.id,
+                                templateId = fullExercise.exerciseTemplate.id,
+                                sets = fullExercise.sets.sortedBy { it.listIndex }.map { set ->
+                                    ExerciseSet(
+                                        id = set.id,
+                                        weight = set.weight,
+                                        reps = set.reps,
+                                        time = set.time,
+                                        distance = set.distance,
+                                    )
+                                }
+                            ).also { print(fullExercise.sets) }
+                        }
                 )
             }
         }.flowOn(Dispatchers.IO)
