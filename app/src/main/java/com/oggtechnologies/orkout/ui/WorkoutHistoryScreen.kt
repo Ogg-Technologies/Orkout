@@ -17,8 +17,6 @@ import com.oggtechnologies.orkout.model.store.Workout
 import com.oggtechnologies.orkout.model.store.doNavigateBack
 import com.oggtechnologies.orkout.model.store.doRemoveWorkout
 import com.oggtechnologies.orkout.redux.Dispatch
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun WorkoutHistoryScreen(state: State, dispatch: Dispatch) = ConfirmationHandler {
@@ -93,16 +91,4 @@ fun WorkoutRow(workout: Workout, remove: () -> Unit) {
             )
         }
     }
-}
-
-private fun Long.format(f: String): String = SimpleDateFormat(f).format(Date(this))
-
-private fun formatDuration(durationMillis: Long): String {
-    val seconds = durationMillis / 1000
-    val minutes = seconds / 60
-    val hours = minutes / 60
-    if (hours == 0L) {
-        return "${minutes % 60}m"
-    }
-    return "${hours}h${minutes % 60}m"
 }

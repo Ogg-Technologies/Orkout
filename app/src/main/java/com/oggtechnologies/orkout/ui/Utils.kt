@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import com.oggtechnologies.orkout.model.store.doNavigateBack
 import com.oggtechnologies.orkout.redux.Dispatch
+import java.text.SimpleDateFormat
+import java.util.*
 
 fun Context.toast(message: String) =
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -44,6 +46,19 @@ fun BackButton(dispatch: Dispatch) {
     ) {
         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
     }
+}
+
+fun Long.format(f: String): String = SimpleDateFormat(f, Locale.ENGLISH).format(this)
+
+fun formatDuration(durationMillis: Long): String {
+    val totalSeconds = durationMillis / 1000
+    val totalMinutes = totalSeconds / 60
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    val seconds = totalSeconds % 60
+    if (hours != 0L) return "${hours}h${minutes}m${seconds}s"
+    if (totalMinutes != 0L) return "${minutes}m${seconds}s"
+    return "${seconds}s"
 }
 
 private data class ConfirmationDialogState(
