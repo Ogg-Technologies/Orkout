@@ -162,3 +162,7 @@ fun doRemoveSet(setId: Int) = Thunk { _, _  ->
     DBView.removeSet(setId)
 }
 
+fun State.getLastPerformedTimeForExercise(exerciseTemplate: ExerciseTemplate): Long? =
+    workoutHistory.lastOrNull {
+        it.exercises.any { exercise -> exercise.templateId == exerciseTemplate.id }
+    }?.endTime
