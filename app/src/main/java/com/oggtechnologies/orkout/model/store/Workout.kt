@@ -57,14 +57,6 @@ val SetDataField.unit
         is SetDataField.Distance -> "m"
     }
 
-val SetDataField.key
-    get() = when (this) {
-        is SetDataField.Weight -> "weight"
-        is SetDataField.Reps -> "reps"
-        is SetDataField.Time -> "time"
-        is SetDataField.Distance -> "distance"
-    }
-
 data class Exercise(
     val id: Int,
     val templateId: Int,
@@ -154,8 +146,8 @@ fun doNewSet(exercise: Exercise) = Thunk { state, _  ->
     DBView.addSet(exercise.id, newSetFrom(exercise.sets))
 }
 
-fun doEditSet(exerciseId: Int, setIndex: Int, set: ExerciseSet) = Thunk { _, _  ->
-    DBView.editSet(exerciseId, setIndex, set)
+fun doEditSet(exerciseId: Int, set: ExerciseSet) = Thunk { _, _  ->
+    DBView.editSet(exerciseId, set)
 }
 
 fun doRemoveSet(setId: Int) = Thunk { _, _  ->

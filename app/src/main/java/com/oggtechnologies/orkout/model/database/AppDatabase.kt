@@ -101,6 +101,20 @@ data class SetEntity(
     val distance: Double?,
 )
 
+/**
+ * Same as [SetEntity] but without the [SetEntity.listIndex] field.
+ * Used to update sets without changing the index.
+ */
+data class SetWithoutIndex(
+    val id: Int,
+    val exercise: Int,
+    val weight: Double?,
+    val reps: Int?,
+    val time: Int?,
+    val distance: Double?,
+
+)
+
 data class WorkoutTimes(
     val id: Int,
     val startTime: Long,
@@ -142,8 +156,8 @@ interface AppDao {
     @Update(entity = WorkoutEntity::class)
     fun updateWorkoutTimes(workoutTimes: WorkoutTimes)
 
-    @Update
-    fun updateSet(set: SetEntity)
+    @Update(entity = SetEntity::class)
+    fun updateSet(set: SetWithoutIndex)
 
     @Transaction
     @Query("SELECT * FROM WorkoutEntity ORDER BY startTime DESC")

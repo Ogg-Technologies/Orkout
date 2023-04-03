@@ -123,12 +123,11 @@ object DBView {
         }
     }
 
-    fun editSet(exerciseId: Int, setIndex: Int, set: ExerciseSet) {
+    fun editSet(exerciseId: Int, set: ExerciseSet) {
         MainScope().launch(Dispatchers.IO) {
             App.db.appDao().updateSet(
-                SetEntity(
+                SetWithoutIndex(
                     id = set.id,
-                    listIndex = setIndex,
                     exercise = exerciseId,
                     weight = set.weight,
                     reps = set.reps,
