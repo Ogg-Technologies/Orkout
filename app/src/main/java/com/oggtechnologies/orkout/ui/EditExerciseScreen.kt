@@ -114,15 +114,15 @@ fun DataFieldDouble(
         }
     } ?: ""
     var text: String by remember { mutableStateOf(str) }
+    fun isValid() = text.isEmpty() || text.toDoubleOrNull() != null
     DataField(
         value = text,
         onValueChange = { newString ->
-            if (newString.isEmpty() || newString.toDoubleOrNull() != null) {
-                text = newString
-                edit(newString.toDoubleOrNull())
-            }
+            text = newString
+            if (isValid()) edit(newString.toDoubleOrNull())
         },
         field = field,
+        isValid = isValid()
     )
 }
 
@@ -132,17 +132,21 @@ fun DataFieldInt(
     value: Int?,
     edit: (Int?) -> Unit
 ) {
+    var text: String by remember { mutableStateOf(value?.toString() ?: "") }
+    fun isValid() = text.isEmpty() || text.toIntOrNull() != null
     DataField(
-        value = value?.toString() ?: "",
+        value = text,
         onValueChange = { newString ->
-            if (newString.isEmpty()) edit(null) else newString.toIntOrNull()?.let { edit(it) }
+            text = newString
+            if (isValid()) edit(newString.toIntOrNull())
         },
         field = field,
+        isValid = isValid()
     )
 }
 
 @Composable
-fun DataField(value: String, field: SetDataField, onValueChange: (String) -> Unit) {
+fun DataField(value: String, field: SetDataField, onValueChange: (String) -> Unit, isValid: Boolean) {
     TextField(
         value = value,
         onValueChange = onValueChange,
@@ -151,6 +155,7 @@ fun DataField(value: String, field: SetDataField, onValueChange: (String) -> Uni
             keyboardType = KeyboardType.Number,
             imeAction = ImeAction.Next
         ),
+        isError = !isValid,
         modifier = Modifier.fillMaxWidth()
     )
 }
