@@ -70,7 +70,7 @@ data class WorkoutEntity(
             entity = ExerciseTemplateEntity::class,
             parentColumns = ["id"],
             childColumns = ["exerciseTemplate"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.RESTRICT
         )
     ]
 )
@@ -123,8 +123,11 @@ data class WorkoutTimes(
 
 @Dao
 interface AppDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     fun insertExerciseTemplate(exerciseTemplate: ExerciseTemplateEntity)
+
+    @Update
+    fun updateExerciseTemplate(exerciseTemplate: ExerciseTemplateEntity)
 
     @Query("SELECT * FROM ExerciseTemplateEntity ORDER BY name")
     fun loadExerciseTemplates(): Flow<List<ExerciseTemplateEntity>>
@@ -217,7 +220,10 @@ data class FullExercise(
         ExerciseEntity::class,
         SetEntity::class
     ],
-    version = 1
+    version = 2,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2)
+    ]
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun appDao(): AppDao

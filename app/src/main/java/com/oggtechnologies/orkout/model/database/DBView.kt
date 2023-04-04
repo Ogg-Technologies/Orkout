@@ -10,9 +10,24 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 object DBView {
-    fun addOrUpdateExerciseTemplate(template: ExerciseTemplate) {
+    fun addExerciseTemplate(template: ExerciseTemplate) {
         MainScope().launch(Dispatchers.IO) {
             App.db.appDao().insertExerciseTemplate(
+                ExerciseTemplateEntity(
+                    id = template.id,
+                    name = template.name,
+                    hasWeight = SetDataField.Weight in template.fields,
+                    hasReps = SetDataField.Reps in template.fields,
+                    hasTime = SetDataField.Time in template.fields,
+                    hasDistance = SetDataField.Distance in template.fields,
+                )
+            )
+        }
+    }
+
+    fun updateExerciseTemplate(template: ExerciseTemplate) {
+        MainScope().launch(Dispatchers.IO) {
+            App.db.appDao().updateExerciseTemplate(
                 ExerciseTemplateEntity(
                     id = template.id,
                     name = template.name,
@@ -187,6 +202,6 @@ fun prepopulateData() {
     )
 
     for (template in exerciseTemplates) {
-        DBView.addOrUpdateExerciseTemplate(template)
+        DBView.addExerciseTemplate(template)
     }
 }

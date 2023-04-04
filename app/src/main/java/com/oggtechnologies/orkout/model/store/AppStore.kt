@@ -26,8 +26,14 @@ val State.activeWorkout: Workout?
 
 data class SetState(val state: State) : Action
 
-fun doAddOrUpdateExerciseTemplate(exerciseTemplate: ExerciseTemplate) = Thunk { _, _ ->
-    DBView.addOrUpdateExerciseTemplate(exerciseTemplate)
+fun doAddOrUpdateExerciseTemplate(exerciseTemplate: ExerciseTemplate) = Thunk { state, _ ->
+    val trimmedName = exerciseTemplate.name.trim()
+    val template = exerciseTemplate.copy(name = trimmedName)
+    if (state.exerciseTemplates.any { it.id == template.id }) {
+        DBView.updateExerciseTemplate(template)
+    } else {
+        DBView.addExerciseTemplate(template)
+    }
 }
 
 data class SetExerciseTemplates(val exerciseTemplates: List<ExerciseTemplate>) : Action
