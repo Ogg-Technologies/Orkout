@@ -22,6 +22,10 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
         dispatch(doNavigateBack())
     }
     val exercise = state.activeWorkout?.exercises?.get(screen.exerciseIndex)
+    val lastTimeExercise = state.workoutHistory
+        .filter { it.endTime != null }
+        .flatMap { it.exercises }
+        .lastOrNull { it.template == exercise?.template }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -43,6 +47,9 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                if (lastTimeExercise != null) {
+                    LastTimeData(lastTimeExercise)
+                }
                 LazyColumn(
                     modifier = Modifier
                         .height(0.dp)
@@ -65,6 +72,39 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
             }
         }
     )
+}
+
+@Composable
+fun LastTimeData(lastTimeExercise: Exercise) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(18.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+        ) {
+            Text("Last time you did this exercise:")
+            Column(
+                modifier = Modifier.padding(start = 20.dp)
+            ) {
+                lastTimeExercise.sets.forEachIndexed { index, exerciseSet ->
+                    val setDataString = lastTimeExercise.template!!.fields.map { field ->
+                        val data = when (field) {
+                            is SetDataField.Weight -> exerciseSet.weight
+                            is SetDataField.Reps -> exerciseSet.reps
+                            is SetDataField.Time -> exerciseSet.time
+                            is SetDataField.Distance -> exerciseSet.distance
+                        }
+                        "${field.name}: ${data ?: "unknown"} ${field.unit}"
+                    }.joinToString(", ")
+                    Text("Set ${index + 1}: $setDataString")
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -146,7 +186,12 @@ fun DataFieldInt(
 }
 
 @Composable
-fun DataField(value: String, field: SetDataField, onValueChange: (String) -> Unit, isValid: Boolean) {
+fun DataField(
+    value: String,
+    field: SetDataField,
+    onValueChange: (String) -> Unit,
+    isValid: Boolean
+) {
     TextField(
         value = value,
         onValueChange = onValueChange,
