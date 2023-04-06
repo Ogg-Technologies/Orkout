@@ -40,12 +40,7 @@ object DBView {
 
     fun addSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int) {
         MainScope().launch(Dispatchers.IO) {
-            App.db.appDao().insertSuggestedExercise(
-                SuggestedExerciseEntity(
-                    exerciseTemplate = exerciseTemplateId,
-                    workoutTemplate = workoutTemplateId
-                )
-            )
+            App.db.appDao().insertSuggestedExerciseLast(workoutTemplateId, exerciseTemplateId)
         }
     }
 
@@ -55,13 +50,28 @@ object DBView {
         }
     }
 
+    fun moveSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int, newIndex: Int) {
+        MainScope().launch(Dispatchers.IO) {
+            App.db.appDao().moveSuggestedExercise(
+                SuggestedExerciseEntity(
+                    workoutTemplate = workoutTemplateId,
+                    exerciseTemplate = exerciseTemplateId,
+                    listIndex = newIndex
+                )
+            )
+        }
+    }
+
     fun getWorkoutTemplates(): Flow<List<WorkoutTemplate>> {
         return App.db.appDao().loadFullWorkoutTemplates().map { list ->
             list.map { fullWorkoutTemplate ->
                 WorkoutTemplate(
                     id = fullWorkoutTemplate.workoutTemplate.id,
                     name = fullWorkoutTemplate.workoutTemplate.name,
-                    suggestedExercises = fullWorkoutTemplate.suggestedExercises.map { exerciseTemplateEntity ->
+                    suggestedExercises = fullWorkoutTemplate.fullSuggestedExercises
+                        .sortedBy { it.suggestedExercise.listIndex }
+                        .map { it.exerciseTemplate }
+                        .map { exerciseTemplateEntity ->
                         ExerciseTemplate(
                             id = exerciseTemplateEntity.id,
                             name = exerciseTemplateEntity.name,
@@ -156,6 +166,12 @@ object DBView {
             exercise.sets.forEach { set ->
                 addSet(exercise.id, set)
             }
+        }
+    }
+
+    fun setWorkoutTemplateForWorkout(workoutId: Int, workoutTemplateId: Int?) {
+        MainScope().launch(Dispatchers.IO) {
+            App.db.appDao().updateWorkoutTemplateForWorkout(workoutId, workoutTemplateId)
         }
     }
 

@@ -2,14 +2,17 @@ package com.oggtechnologies.orkout.ui
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import com.oggtechnologies.orkout.model.store.doNavigateBack
 import com.oggtechnologies.orkout.redux.Dispatch
 import java.text.SimpleDateFormat
@@ -17,6 +20,34 @@ import java.util.*
 
 fun Context.toast(message: String) =
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+@Composable
+fun Spinner(
+    items: List<String>,
+    selected: Int,
+    onSelected: (Int) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        Button(
+            onClick = { expanded = true },
+            modifier = Modifier.clickable { expanded = true },
+        ) {
+            Text(items[selected])
+            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Dropdown")
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            items.forEachIndexed { index, item ->
+                DropdownMenuItem(onClick = {
+                    expanded = false
+                    onSelected(index)
+                }) {
+                    Text(item)
+                }
+            }
+        }
+    }
+}
 
 fun <I> LazyListScope.itemsWithDividers(
     items: List<I>,

@@ -3,8 +3,11 @@ package com.oggtechnologies.orkout.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,23 +59,119 @@ fun ActiveWorkoutScreen(activeWorkout: Workout, state: State, dispatch: Dispatch
                 )
             },
             content = {
-
-
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    TemplateSelector(activeWorkout, state, dispatch)
                     HeaderRow(activeWorkout)
-                    PerformedExercisesList(
-                        activeWorkout, state, dispatch, modifier = Modifier
-                            .height(0.dp)
-                            .weight(1f)
-                    )
-                    AddExerciseButton(dispatch)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        PerformedExercisesList(activeWorkout, dispatch)
+                        AddExerciseView(state, activeWorkout, dispatch)
+                    }
                 }
             }
         )
     }
+
+@Composable
+private fun AddExerciseView(
+    state: State,
+    activeWorkout: Workout,
+    dispatch: Dispatch
+) {
+    state.getWorkoutTemplate(activeWorkout.templateId)
+        ?.let { template ->
+            val quickAddExercises = template.suggestedExercises.filter { suggestedExercise ->
+                activeWorkout.exercises.none { it.template!!.id == suggestedExercise.id }
+            }
+            Card(
+                modifier = Modifier
+                    .padding(18.dp)
+            ) {
+                Column {
+                    quickAddExercises.forEach { suggestedExercise ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    dispatch(
+                                        doStartExercise(
+                                            activeWorkout.id,
+                                            suggestedExercise
+                                        )
+                                    )
+                                }
+                                .padding(18.dp)
+                        ) {
+                            Text(suggestedExercise.name)
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = "Add exercise"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    Button(
+        onClick = {
+            dispatch(doNavigateTo(Screen.PickExerciseInActiveWorkout))
+        }
+    ) {
+        Text(text = "Add Exercise")
+    }
+}
+
+@Composable
+private fun PerformedExercisesList(
+    activeWorkout: Workout,
+    dispatch: Dispatch
+) {
+    activeWorkout.exercises.forEachIndexed { index, exercise ->
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    dispatch(doNavigateTo(Screen.EditExercise(index)))
+                }
+                .padding(18.dp)
+        ) {
+            Text(exercise.name)
+            Spacer(modifier = Modifier.weight(1f))
+            Text("${exercise.sets.size} sets")
+            Spacer(modifier = Modifier.width(16.dp))
+            SimpleStringOverflowMenu {
+                "Delete" does {
+                    dispatch(doRemoveExercise(exercise.id))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TemplateSelector(activeWorkout: Workout, state: State, dispatch: Dispatch) {
+    val templateOptions = listOf(null) + state.workoutTemplates
+    val items = templateOptions.map { it?.name ?: "No Template" }
+    // indexOfFirst returns -1 if not found, so we add 1 to get the correct index
+    val selected =
+        state.workoutTemplates.indexOfFirst { it.id == state.activeWorkout?.templateId } + 1
+    Spinner(
+        items = items,
+        selected = selected,
+        onSelected = {
+            dispatch(doSetWorkoutTemplateForWorkout(activeWorkout.id, templateOptions[it]?.id))
+        }
+    )
+}
 
 @Composable
 fun HeaderRow(activeWorkout: Workout) {
@@ -116,45 +215,3 @@ fun timeSince(startTime: Long): Long {
     return currentTime - startTime
 }
 
-@Composable
-private fun PerformedExercisesList(
-    activeWorkout: Workout,
-    state: State,
-    dispatch: Dispatch,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(modifier = modifier) {
-        itemsIndexedWithDividers(activeWorkout.exercises) { index, exercise ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        dispatch(doNavigateTo(Screen.EditExercise(index)))
-                    }
-                    .padding(18.dp)
-            ) {
-                Text(exercise.name)
-                Spacer(modifier = Modifier.weight(1f))
-                Text("${exercise.sets.size} sets")
-                Spacer(modifier = Modifier.width(16.dp))
-                SimpleStringOverflowMenu {
-                    "Delete" does {
-                        dispatch(doRemoveExercise(exercise.id))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AddExerciseButton(dispatch: Dispatch) {
-    Button(
-        onClick = {
-            dispatch(doNavigateTo(Screen.PickExerciseInActiveWorkout))
-        }
-    ) {
-        Text(text = "Add Exercise")
-    }
-}

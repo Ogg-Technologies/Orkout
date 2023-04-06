@@ -102,6 +102,10 @@ fun doRemoveSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int) =
     DBView.removeSuggestedExercise(workoutTemplateId, exerciseTemplateId)
 }
 
+fun doMoveSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int, newIndex: Int) = Thunk { _, _ ->
+    DBView.moveSuggestedExercise(workoutTemplateId, exerciseTemplateId, newIndex)
+}
+
 fun doStartWorkout() = Thunk { state, dispatch ->
     val workout = Workout(
         id = generateId(),
@@ -131,6 +135,10 @@ fun doAddWorkout(workout: Workout) = Thunk { _, _  ->
 
 fun doRemoveWorkout(workoutId: Int) = Thunk { _, _  ->
     DBView.removeWorkout(workoutId)
+}
+
+fun doSetWorkoutTemplateForWorkout(workoutId: Int, workoutTemplateId: Int?) = Thunk { _, _  ->
+    DBView.setWorkoutTemplateForWorkout(workoutId, workoutTemplateId)
 }
 
 fun doAddExercise(workoutId: Int, exercise: Exercise) = Thunk { state, _  ->

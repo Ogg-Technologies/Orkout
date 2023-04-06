@@ -49,7 +49,7 @@ fun EditWorkoutTemplateScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    itemsWithDividers(template.suggestedExercises) { exerciseTemplate ->
+                    itemsIndexedWithDividers(template.suggestedExercises) { index, exerciseTemplate ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -64,6 +64,24 @@ fun EditWorkoutTemplateScreen(
                                         doRemoveSuggestedExercise(
                                             template.id,
                                             exerciseTemplate.id
+                                        )
+                                    )
+                                }
+                                if (index > 0) "Move up" does {
+                                    dispatch(
+                                        doMoveSuggestedExercise(
+                                            template.id,
+                                            exerciseTemplate.id,
+                                            index - 1
+                                        )
+                                    )
+                                }
+                                if (index < template.suggestedExercises.size - 1) "Move down" does {
+                                    dispatch(
+                                        doMoveSuggestedExercise(
+                                            template.id,
+                                            exerciseTemplate.id,
+                                            index + 1
                                         )
                                     )
                                 }

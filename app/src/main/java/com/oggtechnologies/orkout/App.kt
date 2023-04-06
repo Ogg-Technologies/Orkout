@@ -8,6 +8,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.oggtechnologies.orkout.model.database.AppDatabase
+import com.oggtechnologies.orkout.model.database.MIGRATION_2_3
 import com.oggtechnologies.orkout.model.database.prepopulateData
 
 class App : Application() {
@@ -36,6 +37,7 @@ class App : Application() {
 
         val db: AppDatabase by lazy {
             Room.databaseBuilder(context, AppDatabase::class.java, "orkout.db")
+                .addMigrations(MIGRATION_2_3)
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
