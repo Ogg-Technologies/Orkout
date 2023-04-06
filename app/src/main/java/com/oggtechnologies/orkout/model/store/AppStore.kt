@@ -17,11 +17,14 @@ data class State(
     val activeWorkoutId: Int? = null,
     val navigationStack: NavigationStack = listOf(Screen.Main),
     val workoutHistory: List<Workout> = emptyList(),
+    val workoutTemplates: List<WorkoutTemplate> = emptyList(),
     val exerciseTemplates: List<ExerciseTemplate> = emptyList(),
 )
 
 val State.activeWorkout: Workout?
     get() = activeWorkoutId?.let { id -> workoutHistory.find { it.id == id } }
+
+fun State.getWorkoutTemplate(id: Int): WorkoutTemplate? = workoutTemplates.find { it.id == id }
 
 
 data class SetState(val state: State) : Action
@@ -40,10 +43,13 @@ data class SetExerciseTemplates(val exerciseTemplates: List<ExerciseTemplate>) :
 
 data class SetWorkoutHistory(val workoutHistory: List<Workout>) : Action
 
+data class SetWorkoutTemplates(val workoutTemplates: List<WorkoutTemplate>) : Action
+
 fun rootReducer(state: State, action: Action): State = when (action) {
     is SetState -> action.state
     is SetExerciseTemplates -> state.copy(exerciseTemplates = action.exerciseTemplates)
     is SetWorkoutHistory -> state.copy(workoutHistory = action.workoutHistory)
+    is SetWorkoutTemplates -> state.copy(workoutTemplates = action.workoutTemplates)
     is SetActiveWorkoutId -> state.copy(activeWorkoutId = action.id)
     is NavAction -> state.copy(
         navigationStack = navigationReducer(

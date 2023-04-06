@@ -4,19 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.oggtechnologies.orkout.model.database.JsonDatabase
 import com.oggtechnologies.orkout.model.database.DBView
+import com.oggtechnologies.orkout.model.database.JsonDatabase
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 import com.oggtechnologies.orkout.ui.*
 import com.oggtechnologies.orkout.ui.theme.OrkoutTheme
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +42,11 @@ class MainActivity : ComponentActivity() {
                 appStore.dispatch(SetWorkoutHistory(workouts))
             }
         }
+        MainScope().launch {
+            DBView.getWorkoutTemplates().collect { workoutTemplates ->
+                appStore.dispatch(SetWorkoutTemplates(workoutTemplates))
+            }
+        }
     }
 
     private fun tryLoadSavedState() {
@@ -54,6 +60,27 @@ private fun OrkoutApp(state: State, dispatch: Dispatch) {
     OrkoutTheme {
         when (state.currentScreen) {
             is Screen.Main -> MainScreen(state, dispatch)
+            is Screen.WorkoutTemplates -> WorkoutTemplatesScreen(state, dispatch)
+            is Screen.EditWorkoutTemplate -> {
+                val template =
+                    state.getWorkoutTemplate((state.currentScreen as Screen.EditWorkoutTemplate).workoutTemplateId)
+                if (template == null) ErrorScreen(dispatch) else EditWorkoutTemplateScreen(
+                    template,
+                    state,
+                    dispatch
+                )
+            }
+            is Screen.PickExerciseTemplateForWorkoutTemplate -> PickExerciseScreen(
+                state,
+                dispatch,
+                onExercisePicked = {
+                    dispatch(
+                        doAddSuggestedExercise(
+                            (state.currentScreen as Screen.PickExerciseTemplateForWorkoutTemplate).workoutTemplateId,
+                            it.id
+                        )
+                    )
+                })
             is Screen.ExerciseTemplates -> ExerciseTemplatesScreen(state, dispatch)
             is Screen.EditExerciseTemplate -> EditExerciseTemplateScreen(
                 state.currentScreen as Screen.EditExerciseTemplate,
@@ -66,7 +93,10 @@ private fun OrkoutApp(state: State, dispatch: Dispatch) {
                 state,
                 dispatch,
             )
-            is Screen.PickExercise -> PickExerciseScreen(state, dispatch)
+            is Screen.PickExerciseInActiveWorkout -> PickExerciseScreen(
+                state,
+                dispatch,
+                onExercisePicked = { dispatch(doStartExercise(state.activeWorkoutId!!, it)) })
             is Screen.EditExercise -> EditExerciseScreen(
                 state.currentScreen as Screen.EditExercise,
                 state,

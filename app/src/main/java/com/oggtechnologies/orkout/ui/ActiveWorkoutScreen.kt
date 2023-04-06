@@ -152,7 +152,7 @@ private fun PerformedExercisesList(
 private fun AddExerciseButton(dispatch: Dispatch) {
     Button(
         onClick = {
-            dispatch(doNavigateTo(Screen.PickExercise))
+            dispatch(doNavigateTo(Screen.PickExerciseInActiveWorkout))
         }
     ) {
         Text(text = "Add Exercise")

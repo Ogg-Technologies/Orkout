@@ -34,6 +34,9 @@ private fun MainMenuList(state: State, dispatch: Dispatch) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         MainMenuButton(
+            onClick = { dispatch(doNavigateTo(Screen.WorkoutTemplates)) }
+        ) { Text(text = "Workout Templates") }
+        MainMenuButton(
             onClick = { dispatch(doNavigateTo(Screen.ExerciseTemplates)) }
         ) { Text(text = "Exercise Templates") }
         MainMenuButton(

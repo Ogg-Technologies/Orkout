@@ -5,14 +5,14 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import com.oggtechnologies.orkout.model.store.ExerciseTemplate
 import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.model.store.doNavigateBack
-import com.oggtechnologies.orkout.model.store.doStartExercise
 import com.oggtechnologies.orkout.model.store.getLastPerformedTimeForExercise
 import com.oggtechnologies.orkout.redux.Dispatch
 
 @Composable
-fun PickExerciseScreen(state: State, dispatch: Dispatch) {
+fun PickExerciseScreen(state: State, dispatch: Dispatch, onExercisePicked: (ExerciseTemplate) -> Unit) {
     BackHandler {
         dispatch(doNavigateBack())
     }
@@ -31,7 +31,7 @@ fun PickExerciseScreen(state: State, dispatch: Dispatch) {
             SearchableExerciseTemplatesListView(
                 exerciseTemplates = state.exerciseTemplates,
                 onItemClick = {
-                    dispatch(doStartExercise(state.activeWorkoutId!!, it))
+                    onExercisePicked(it)
                     dispatch(doNavigateBack())
                 },
                 getLastPerformedTime = state::getLastPerformedTimeForExercise

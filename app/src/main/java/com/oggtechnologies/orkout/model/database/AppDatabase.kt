@@ -124,6 +124,24 @@ data class WorkoutTimes(
 @Dao
 interface AppDao {
     @Insert
+    fun insertWorkoutTemplate(workoutTemplate: WorkoutTemplateEntity)
+
+    @Update
+    fun updateWorkoutTemplate(workoutTemplate: WorkoutTemplateEntity)
+
+    @Query("Delete from WorkoutTemplateEntity where id = :id")
+    fun deleteWorkoutTemplate(id: Int)
+
+    @Insert
+    fun insertSuggestedExercise(suggestedExercise: SuggestedExerciseEntity)
+
+    @Query("Delete from SuggestedExerciseEntity where workoutTemplate = :workoutTemplateId and exerciseTemplate = :exerciseTemplateId")
+    fun deleteSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int)
+
+    @Query("SELECT * FROM WorkoutTemplateEntity ORDER BY name")
+    fun loadFullWorkoutTemplates(): Flow<List<FullWorkoutTemplate>>
+
+    @Insert
     fun insertExerciseTemplate(exerciseTemplate: ExerciseTemplateEntity)
 
     @Update

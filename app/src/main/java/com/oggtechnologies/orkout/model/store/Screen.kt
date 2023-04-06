@@ -11,6 +11,15 @@ sealed class Screen {
     object Main : Screen()
 
     @Serializable
+    object WorkoutTemplates : Screen()
+
+    @Serializable
+    data class EditWorkoutTemplate(val workoutTemplateId: Int) : Screen()
+
+    @Serializable
+    data class PickExerciseTemplateForWorkoutTemplate(val workoutTemplateId: Int) : Screen()
+
+    @Serializable
     object ExerciseTemplates : Screen()
 
     @Serializable
@@ -23,7 +32,7 @@ sealed class Screen {
     object ActiveWorkout : Screen()
 
     @Serializable
-    object PickExercise : Screen()
+    object PickExerciseInActiveWorkout : Screen()
 
     @Serializable
     data class EditExercise(val exerciseIndex: Int) : Screen()
@@ -37,12 +46,15 @@ infix fun Screen.canNavigateTo(destination: Screen): Boolean {
     return when (this) {
         is Screen.Main -> destination in listOf(
             Screen.ActiveWorkout,
+            Screen.WorkoutTemplates,
+            Screen.ExerciseTemplates,
             Screen.WorkoutHistory,
-            Screen.ExerciseTemplates
         )
+        is Screen.WorkoutTemplates -> destination is Screen.EditWorkoutTemplate
+        is Screen.EditWorkoutTemplate -> destination is Screen.PickExerciseTemplateForWorkoutTemplate
         is Screen.ExerciseTemplates -> destination is Screen.EditExerciseTemplate
-        is Screen.ActiveWorkout -> destination is Screen.PickExercise || destination is Screen.EditExercise
-        is Screen.PickExercise -> destination is Screen.EditExercise
+        is Screen.ActiveWorkout -> destination is Screen.PickExerciseInActiveWorkout || destination is Screen.EditExercise
+        is Screen.PickExerciseInActiveWorkout -> destination is Screen.EditExercise
         else -> false
     }
 }

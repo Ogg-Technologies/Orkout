@@ -82,6 +82,26 @@ data class Workout(
     val exercises: List<Exercise>,
 )
 
+fun doAddWorkoutTemplate(workoutTemplate: WorkoutTemplate) = Thunk { _, _ ->
+    DBView.addWorkoutTemplate(workoutTemplate)
+}
+
+fun doRemoveWorkoutTemplate(workoutTemplateId: Int) = Thunk { _, _ ->
+    DBView.removeWorkoutTemplate(workoutTemplateId)
+}
+
+fun doRenameWorkoutTemplate(workoutTemplateId: Int, name: String) = Thunk { _, _ ->
+    DBView.renameWorkoutTemplate(workoutTemplateId, name)
+}
+
+fun doAddSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int) = Thunk { _, _ ->
+    DBView.addSuggestedExercise(workoutTemplateId, exerciseTemplateId)
+}
+
+fun doRemoveSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int) = Thunk { _, _ ->
+    DBView.removeSuggestedExercise(workoutTemplateId, exerciseTemplateId)
+}
+
 fun doStartWorkout() = Thunk { state, dispatch ->
     val workout = Workout(
         id = generateId(),

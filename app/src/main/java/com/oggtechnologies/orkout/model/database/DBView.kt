@@ -10,6 +10,74 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 object DBView {
+    fun addWorkoutTemplate(template: WorkoutTemplate) {
+        MainScope().launch(Dispatchers.IO) {
+            App.db.appDao().insertWorkoutTemplate(
+                WorkoutTemplateEntity(
+                    id = template.id,
+                    name = template.name
+                )
+            )
+        }
+    }
+
+    fun renameWorkoutTemplate(workoutTemplateId: Int, name: String) {
+        MainScope().launch(Dispatchers.IO) {
+            App.db.appDao().updateWorkoutTemplate(
+                WorkoutTemplateEntity(
+                    id = workoutTemplateId,
+                    name = name
+                )
+            )
+        }
+    }
+
+    fun removeWorkoutTemplate(workoutTemplateId: Int) {
+        MainScope().launch(Dispatchers.IO) {
+            App.db.appDao().deleteWorkoutTemplate(workoutTemplateId)
+        }
+    }
+
+    fun addSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int) {
+        MainScope().launch(Dispatchers.IO) {
+            App.db.appDao().insertSuggestedExercise(
+                SuggestedExerciseEntity(
+                    exerciseTemplate = exerciseTemplateId,
+                    workoutTemplate = workoutTemplateId
+                )
+            )
+        }
+    }
+
+    fun removeSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int) {
+        MainScope().launch(Dispatchers.IO) {
+            App.db.appDao().deleteSuggestedExercise(workoutTemplateId, exerciseTemplateId)
+        }
+    }
+
+    fun getWorkoutTemplates(): Flow<List<WorkoutTemplate>> {
+        return App.db.appDao().loadFullWorkoutTemplates().map { list ->
+            list.map { fullWorkoutTemplate ->
+                WorkoutTemplate(
+                    id = fullWorkoutTemplate.workoutTemplate.id,
+                    name = fullWorkoutTemplate.workoutTemplate.name,
+                    suggestedExercises = fullWorkoutTemplate.suggestedExercises.map { exerciseTemplateEntity ->
+                        ExerciseTemplate(
+                            id = exerciseTemplateEntity.id,
+                            name = exerciseTemplateEntity.name,
+                            fields = listOfNotNull(
+                                if (exerciseTemplateEntity.hasWeight) SetDataField.Weight else null,
+                                if (exerciseTemplateEntity.hasReps) SetDataField.Reps else null,
+                                if (exerciseTemplateEntity.hasTime) SetDataField.Time else null,
+                                if (exerciseTemplateEntity.hasDistance) SetDataField.Distance else null,
+                            )
+                        )
+                    }
+                )
+            }
+        }.flowOn(Dispatchers.IO)
+    }
+
     fun addExerciseTemplate(template: ExerciseTemplate) {
         MainScope().launch(Dispatchers.IO) {
             App.db.appDao().insertExerciseTemplate(
