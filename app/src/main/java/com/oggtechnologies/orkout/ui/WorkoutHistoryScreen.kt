@@ -8,11 +8,16 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.ColorUtils
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.redux.Dispatch
+import java.time.Instant
+import java.util.*
+import kotlin.math.absoluteValue
 
 @Composable
 fun WorkoutHistoryScreen(state: State, dispatch: Dispatch) = ConfirmationHandler {
@@ -32,6 +37,28 @@ fun WorkoutHistoryScreen(state: State, dispatch: Dispatch) = ConfirmationHandler
         },
         content = {
             LazyColumn {
+                item {
+                    CalendarView(
+                        dateRingColor = { date ->
+                            val workoutOnDate = state.workoutHistory.firstOrNull {
+                                Instant.ofEpochMilli(it.startTime).atZone(
+                                    TimeZone.getDefault().toZoneId()
+                                ).toLocalDate() == date
+                            }
+                            workoutOnDate?.let { workout ->
+                                Color(workout.templateId.let {
+                                    ColorUtils.HSLToColor(
+                                        floatArrayOf(
+                                            (it.toFloat().absoluteValue + 20) % 360f,
+                                            0.9f,
+                                            0.75f
+                                        )
+                                    )
+                                })
+                            }
+                        }
+                    )
+                }
                 itemsWithDividers(state.workoutHistory) { workout ->
                     WorkoutRow(workout, remove = {
                         showConfirmDialog("Are you sure you want to delete this workout?") {
