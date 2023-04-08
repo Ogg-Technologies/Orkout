@@ -22,7 +22,6 @@ import com.oggtechnologies.orkout.model.store.name
 fun SearchableExerciseTemplatesListView(
     exerciseTemplates: List<ExerciseTemplate>,
     onItemClick: (ExerciseTemplate) -> Unit,
-    getLastPerformedTime: (ExerciseTemplate) -> Long?,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -44,7 +43,7 @@ fun SearchableExerciseTemplatesListView(
         )
         Divider()
         ExerciseTemplatesListView(
-            exerciseTemplates.filterBySearchQuery(searchQuery).sortedByDescending(getLastPerformedTime),
+            exerciseTemplates.filterBySearchQuery(searchQuery),
             onItemClick
         )
     }

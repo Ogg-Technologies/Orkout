@@ -26,11 +26,10 @@ fun ExerciseTemplatesScreen(state: State, dispatch: Dispatch) {
         },
         content = {
             SearchableExerciseTemplatesListView(
-                exerciseTemplates = state.exerciseTemplates,
+                exerciseTemplates = state.getExerciseTemplatesSortedByRecency(),
                 onItemClick = { exerciseTemplate ->
                     dispatch(doNavigateTo(Screen.EditExerciseTemplate(exerciseTemplate)))
                 },
-                getLastPerformedTime = state::getLastPerformedTimeForExercise
             )
         },
         floatingActionButton = {

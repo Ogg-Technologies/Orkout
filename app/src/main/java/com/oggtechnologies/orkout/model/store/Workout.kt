@@ -52,7 +52,7 @@ val SetDataField.name
 val SetDataField.unit
     get() = when (this) {
         is SetDataField.Weight -> "kg"
-        is SetDataField.Reps -> "nr"
+        is SetDataField.Reps -> "reps"
         is SetDataField.Time -> "s"
         is SetDataField.Distance -> "m"
     }
@@ -65,6 +65,18 @@ data class Exercise(
 
 val Exercise?.template: ExerciseTemplate? get() = if (this == null) null else appStore.state.exerciseTemplates.find { it.id == templateId }
 val Exercise?.name: String get() = this.template?.name ?: "Unknown exercise"
+
+fun ExerciseTemplate.prettyPrintSet(set: ExerciseSet): String {
+    return fields.map { field ->
+        val data = when (field) {
+            is SetDataField.Weight -> set.weight
+            is SetDataField.Reps -> set.reps
+            is SetDataField.Time -> set.time
+            is SetDataField.Distance -> set.distance
+        }
+        "${field.name}: ${data ?: "unknown"} ${field.unit}"
+    }.joinToString(", ")
+}
 
 data class ExerciseSet(
     val id: Int,
@@ -102,9 +114,10 @@ fun doRemoveSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int) =
     DBView.removeSuggestedExercise(workoutTemplateId, exerciseTemplateId)
 }
 
-fun doMoveSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int, newIndex: Int) = Thunk { _, _ ->
-    DBView.moveSuggestedExercise(workoutTemplateId, exerciseTemplateId, newIndex)
-}
+fun doMoveSuggestedExercise(workoutTemplateId: Int, exerciseTemplateId: Int, newIndex: Int) =
+    Thunk { _, _ ->
+        DBView.moveSuggestedExercise(workoutTemplateId, exerciseTemplateId, newIndex)
+    }
 
 fun doStartWorkout() = Thunk { state, dispatch ->
     val workout = Workout(
@@ -129,19 +142,19 @@ fun doFinishActiveWorkout() = Thunk { state, dispatch ->
     }
 }
 
-fun doAddWorkout(workout: Workout) = Thunk { _, _  ->
+fun doAddWorkout(workout: Workout) = Thunk { _, _ ->
     DBView.addWorkout(workout)
 }
 
-fun doRemoveWorkout(workoutId: Int) = Thunk { _, _  ->
+fun doRemoveWorkout(workoutId: Int) = Thunk { _, _ ->
     DBView.removeWorkout(workoutId)
 }
 
-fun doSetWorkoutTemplateForWorkout(workoutId: Int, workoutTemplateId: Int?) = Thunk { _, _  ->
+fun doSetWorkoutTemplateForWorkout(workoutId: Int, workoutTemplateId: Int?) = Thunk { _, _ ->
     DBView.setWorkoutTemplateForWorkout(workoutId, workoutTemplateId)
 }
 
-fun doAddExercise(workoutId: Int, exercise: Exercise) = Thunk { state, _  ->
+fun doAddExercise(workoutId: Int, exercise: Exercise) = Thunk { state, _ ->
     DBView.addExercise(workoutId, exercise)
 }
 
@@ -154,7 +167,7 @@ fun doStartExercise(workoutId: Int, exerciseTemplate: ExerciseTemplate) = doAddE
     )
 )
 
-fun doRemoveExercise(exerciseId: Int) = Thunk { _, _  ->
+fun doRemoveExercise(exerciseId: Int) = Thunk { _, _ ->
     DBView.removeExercise(exerciseId)
 }
 
@@ -170,19 +183,35 @@ private fun newSetFrom(sets: List<ExerciseSet>): ExerciseSet {
     )
 }
 
-fun doNewSet(exercise: Exercise) = Thunk { state, _  ->
+fun doNewSet(exercise: Exercise) = Thunk { state, _ ->
     DBView.addSet(exercise.id, newSetFrom(exercise.sets))
 }
 
-fun doEditSet(exerciseId: Int, set: ExerciseSet) = Thunk { _, _  ->
+fun doEditSet(exerciseId: Int, set: ExerciseSet) = Thunk { _, _ ->
     DBView.editSet(exerciseId, set)
 }
 
-fun doRemoveSet(setId: Int) = Thunk { _, _  ->
+fun doRemoveSet(setId: Int) = Thunk { _, _ ->
     DBView.removeSet(setId)
 }
 
-fun State.getLastPerformedTimeForExercise(exerciseTemplate: ExerciseTemplate): Long? =
-    workoutHistory.lastOrNull {
-        it.exercises.any { exercise -> exercise.templateId == exerciseTemplate.id }
-    }?.endTime
+fun State.getExerciseTemplatesSortedByRecency(): List<ExerciseTemplate> {
+    data class Recency(val exerciseTemplate: ExerciseTemplate, val lastWorkoutTime: Long, val indexInWorkout: Int)
+
+    val recency = exerciseTemplates.map { exerciseTemplate ->
+        for (workout in workoutHistory) { // Most recent workout appears first in list
+            if (workout.endTime == null) continue
+            for ((index, exercise) in workout.exercises.withIndex().reversed()) {
+                if (exercise.templateId == exerciseTemplate.id) {
+                    return@map Recency(exerciseTemplate, workout.endTime, index)
+                }
+            }
+        }
+        return@map Recency(exerciseTemplate, Long.MIN_VALUE, Int.MIN_VALUE)
+    }
+    return recency.sortedWith(
+        compareByDescending<Recency> { it.lastWorkoutTime }
+            .thenByDescending { it.indexInWorkout }
+            .thenBy { it.exerciseTemplate.name }
+    ).map { it.exerciseTemplate }
+}

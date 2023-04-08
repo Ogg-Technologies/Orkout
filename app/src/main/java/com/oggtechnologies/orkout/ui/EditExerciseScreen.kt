@@ -91,15 +91,7 @@ fun LastTimeData(lastTimeExercise: Exercise) {
                 modifier = Modifier.padding(start = 20.dp)
             ) {
                 lastTimeExercise.sets.forEachIndexed { index, exerciseSet ->
-                    val setDataString = lastTimeExercise.template!!.fields.map { field ->
-                        val data = when (field) {
-                            is SetDataField.Weight -> exerciseSet.weight
-                            is SetDataField.Reps -> exerciseSet.reps
-                            is SetDataField.Time -> exerciseSet.time
-                            is SetDataField.Distance -> exerciseSet.distance
-                        }
-                        "${field.name}: ${data ?: "unknown"} ${field.unit}"
-                    }.joinToString(", ")
+                    val setDataString = lastTimeExercise.template!!.prettyPrintSet(exerciseSet)
                     Text("Set ${index + 1}: $setDataString")
                 }
             }

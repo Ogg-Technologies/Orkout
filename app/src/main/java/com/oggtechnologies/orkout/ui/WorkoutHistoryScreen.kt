@@ -4,18 +4,14 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.model.store.State
-import com.oggtechnologies.orkout.model.store.Workout
-import com.oggtechnologies.orkout.model.store.doNavigateBack
-import com.oggtechnologies.orkout.model.store.doRemoveWorkout
 import com.oggtechnologies.orkout.redux.Dispatch
 
 @Composable
@@ -82,13 +78,38 @@ fun WorkoutRow(workout: Workout, remove: () -> Unit) {
                 "Delete" does remove
             }
         }
-
         if (expanded) {
-            Text(
-                text = workout.toString(),
-                fontSize = 14.sp,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+            Card(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    for (exercise in workout.exercises) {
+                        Text(text = exercise.name, fontSize = 16.sp)
+                        for (set in exercise.sets) {
+                            Text(
+                                text = exercise.template!!.prettyPrintSet(set),
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            var showDebug: Boolean by remember { mutableStateOf(false) }
+            Button(onClick = { showDebug = !showDebug }) {
+                Text(text = "Toggle Debug")
+            }
+            if (showDebug) {
+                Text(
+                    text = workout.toString(),
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
     }
 }

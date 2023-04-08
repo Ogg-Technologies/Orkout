@@ -19,7 +19,7 @@ import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 
 @Composable
-fun WorkoutTemplatesScreen(state: State, dispatch: Dispatch) {
+fun WorkoutTemplatesScreen(state: State, dispatch: Dispatch) = ConfirmationHandler {
     BackHandler {
         dispatch(doNavigateBack())
     }
@@ -50,7 +50,9 @@ fun WorkoutTemplatesScreen(state: State, dispatch: Dispatch) {
                         Spacer(modifier = Modifier.weight(1f))
                         SimpleStringOverflowMenu {
                             "Delete" does {
-                                dispatch(doRemoveWorkoutTemplate(workoutTemplate.id))
+                                showConfirmDialog("Delete ${workoutTemplate.name}?") {
+                                    dispatch(doRemoveWorkoutTemplate(workoutTemplate.id))
+                                }
                             }
                         }
                     }

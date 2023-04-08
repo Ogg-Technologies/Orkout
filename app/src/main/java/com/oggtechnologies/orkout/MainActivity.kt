@@ -10,6 +10,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import com.oggtechnologies.orkout.model.database.DBView
 import com.oggtechnologies.orkout.model.database.JsonDatabase
 import com.oggtechnologies.orkout.model.store.*
@@ -57,6 +58,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun OrkoutApp(state: State, dispatch: Dispatch) {
+    val context = LocalContext.current
     OrkoutTheme {
         when (state.currentScreen) {
             is Screen.Main -> MainScreen(state, dispatch)
@@ -73,13 +75,20 @@ private fun OrkoutApp(state: State, dispatch: Dispatch) {
             is Screen.PickExerciseTemplateForWorkoutTemplate -> PickExerciseScreen(
                 state,
                 dispatch,
-                onExercisePicked = {
-                    dispatch(
-                        doAddSuggestedExercise(
-                            (state.currentScreen as Screen.PickExerciseTemplateForWorkoutTemplate).workoutTemplateId,
-                            it.id
+                onExercisePicked = { exerciseTemplate ->
+                    val workoutTemplate = state.getWorkoutTemplate(
+                        (state.currentScreen as Screen.PickExerciseTemplateForWorkoutTemplate).workoutTemplateId
+                    )!!
+                    if (workoutTemplate.suggestedExercises.any { it.id == exerciseTemplate.id }) {
+                        context.toast("${exerciseTemplate.name} is already added")
+                    } else {
+                        dispatch(
+                            doAddSuggestedExercise(
+                                workoutTemplate.id,
+                                exerciseTemplate.id
+                            )
                         )
-                    )
+                    }
                 })
             is Screen.ExerciseTemplates -> ExerciseTemplatesScreen(state, dispatch)
             is Screen.EditExerciseTemplate -> EditExerciseTemplateScreen(

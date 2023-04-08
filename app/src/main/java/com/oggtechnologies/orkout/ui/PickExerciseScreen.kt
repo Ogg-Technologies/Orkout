@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import com.oggtechnologies.orkout.model.store.ExerciseTemplate
 import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.model.store.doNavigateBack
-import com.oggtechnologies.orkout.model.store.getLastPerformedTimeForExercise
+import com.oggtechnologies.orkout.model.store.getExerciseTemplatesSortedByRecency
 import com.oggtechnologies.orkout.redux.Dispatch
 
 @Composable
@@ -29,12 +29,11 @@ fun PickExerciseScreen(state: State, dispatch: Dispatch, onExercisePicked: (Exer
         },
         content = {
             SearchableExerciseTemplatesListView(
-                exerciseTemplates = state.exerciseTemplates,
+                exerciseTemplates = state.getExerciseTemplatesSortedByRecency(),
                 onItemClick = {
                     onExercisePicked(it)
                     dispatch(doNavigateBack())
                 },
-                getLastPerformedTime = state::getLastPerformedTimeForExercise
             )
         }
     )
