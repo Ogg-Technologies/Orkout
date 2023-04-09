@@ -1,6 +1,7 @@
 package com.oggtechnologies.orkout.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,19 +46,34 @@ fun WorkoutHistoryScreen(state: State, dispatch: Dispatch) = ConfirmationHandler
                                     TimeZone.getDefault().toZoneId()
                                 ).toLocalDate() == date
                             }
-                            workoutOnDate?.let { workout ->
-                                Color(workout.templateId.let {
-                                    ColorUtils.HSLToColor(
-                                        floatArrayOf(
-                                            (it.toFloat().absoluteValue + 20) % 360f,
-                                            0.9f,
-                                            0.75f
-                                        )
-                                    )
-                                })
-                            }
+                            workoutOnDate?.toColor()
                         }
                     )
+                    Column {
+                        for (template in state.workoutTemplates) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Canvas(
+                                    modifier = Modifier
+                                        .padding(2.dp)
+                                        .size(14.dp)
+                                ) {
+                                    drawCircle(
+                                        color = idToColor(template.id),
+                                        radius = size.width / 2,
+                                    )
+                                }
+                                Text(
+                                    text = template.name,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier
+                                )
+                            }
+                        }
+                    }
                 }
                 itemsWithDividers(state.workoutHistory) { workout ->
                     WorkoutRow(workout, remove = {
@@ -70,6 +86,20 @@ fun WorkoutHistoryScreen(state: State, dispatch: Dispatch) = ConfirmationHandler
         }
     )
 }
+
+private fun Workout.toColor() = idToColor(templateId)
+
+private fun idToColor(id: Int) =
+    if (id == 0) Color.White else Color(
+        id.let {
+        ColorUtils.HSLToColor(
+            floatArrayOf(
+                (it.toFloat().absoluteValue * 127) % 360f,
+                0.9f,
+                0.75f
+            )
+        )
+    })
 
 @Composable
 fun WorkoutRow(workout: Workout, remove: () -> Unit) {

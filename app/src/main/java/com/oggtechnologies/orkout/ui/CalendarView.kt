@@ -60,11 +60,10 @@ fun CalendarView(
                 }
             }
         }
-        var date = firstInCalendar.minusDays(1)
         for (i in 0..5) {
             Row {
                 for (j in 0..6) {
-                    date = date.plusDays(1)
+                    val date = firstInCalendar.plusDays((i * 7 + j).toLong())
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
@@ -72,7 +71,7 @@ fun CalendarView(
                             .weight(1f)
                             .border(0.2.dp, Color.Gray)
                     ) {
-                        DateBoxContents(date, selectedMonth, dateRingColor)
+                        DateBoxContents(date, selectedMonth, dateRingColor(date))
                     }
                 }
             }
@@ -84,7 +83,7 @@ fun CalendarView(
 private fun DateBoxContents(
     date: LocalDate,
     selectedMonth: LocalDate,
-    dateRingColor: (LocalDate) -> Color?
+    ringColor: Color?
 ) {
     val alpha = if (date.month == selectedMonth.month) 1f else 0.4f
     Text(
@@ -97,11 +96,10 @@ private fun DateBoxContents(
             .fillMaxSize()
             .alpha(alpha)
     ) {
-        val color = dateRingColor(date)
-        if (color != null) {
+        if (ringColor != null) {
             val radius = (size.minDimension / 2) * 0.8f
             drawArc(
-                color = color,
+                color = ringColor,
                 startAngle = 0f,
                 sweepAngle = 360f,
                 useCenter = true,
