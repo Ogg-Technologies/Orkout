@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 import com.oggtechnologies.orkout.ui.BackButton
-import com.oggtechnologies.orkout.ui.SearchableExerciseTemplatesListView
+import com.oggtechnologies.orkout.ui.views.SearchableExerciseTemplatesListView
 
 @Composable
 fun ExerciseTemplatesScreen(state: State, dispatch: Dispatch) {
@@ -30,7 +30,7 @@ fun ExerciseTemplatesScreen(state: State, dispatch: Dispatch) {
             SearchableExerciseTemplatesListView(
                 exerciseTemplates = state.getExerciseTemplatesSortedByRecency(),
                 onItemClick = { exerciseTemplate ->
-                    dispatch(doNavigateTo(Screen.EditExerciseTemplate(exerciseTemplate)))
+                    dispatch(doNavigateTo(Screen.ViewExerciseTemplate(exerciseTemplate.id)))
                 },
             )
         },

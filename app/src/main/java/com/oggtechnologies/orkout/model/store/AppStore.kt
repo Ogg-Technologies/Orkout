@@ -26,6 +26,7 @@ val State.activeWorkout: Workout?
 
 fun State.getWorkoutTemplate(id: Int): WorkoutTemplate? = workoutTemplates.find { it.id == id }
 
+fun State.getExerciseTemplate(id: Int): ExerciseTemplate? = exerciseTemplates.find { it.id == id }
 
 data class SetState(val state: State) : Action
 

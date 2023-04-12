@@ -1,4 +1,4 @@
-package com.oggtechnologies.orkout.ui
+package com.oggtechnologies.orkout.ui.views
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border

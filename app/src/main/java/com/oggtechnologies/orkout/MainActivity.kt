@@ -91,6 +91,15 @@ private fun OrkoutApp(state: State, dispatch: Dispatch) {
                     }
                 })
             is Screen.ExerciseTemplates -> ExerciseTemplatesScreen(state, dispatch)
+            is Screen.ViewExerciseTemplate -> {
+                val exerciseTemplate =
+                    state.getExerciseTemplate(screen.exerciseTemplateId)
+                if (exerciseTemplate == null) ErrorScreen(dispatch) else ViewExerciseTemplateScreen(
+                    exerciseTemplate,
+                    state,
+                    dispatch
+                )
+            }
             is Screen.EditExerciseTemplate -> EditExerciseTemplateScreen(
                 screen,
                 state,

@@ -17,6 +17,7 @@ import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.redux.Dispatch
 import com.oggtechnologies.orkout.ui.BackButton
 import com.oggtechnologies.orkout.ui.itemsIndexedWithDividers
+import com.oggtechnologies.orkout.ui.views.ExerciseInfoCardView
 
 @Composable
 fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Dispatch) {
@@ -26,8 +27,8 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
     val exercise = state.activeWorkout?.exercises?.get(screen.exerciseIndex)
     val lastTimeExercise = state.workoutHistory
         .filter { it.endTime != null }
-        .flatMap { it.exercises }
-        .lastOrNull { it.template == exercise?.template }
+        .flatMap { it.exercises.reversed() }
+        .firstOrNull { it.template == exercise?.template }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -50,7 +51,11 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (lastTimeExercise != null) {
-                    LastTimeData(lastTimeExercise)
+                    ExerciseInfoCardView(
+                        header = "Last time you did this exercise:",
+                        exercise = lastTimeExercise,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 LazyColumn(
                     modifier = Modifier
@@ -74,31 +79,6 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
             }
         }
     )
-}
-
-@Composable
-fun LastTimeData(lastTimeExercise: Exercise) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(18.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp)
-        ) {
-            Text("Last time you did this exercise:")
-            Column(
-                modifier = Modifier.padding(start = 20.dp)
-            ) {
-                lastTimeExercise.sets.forEachIndexed { index, exerciseSet ->
-                    val setDataString = lastTimeExercise.template!!.prettyPrintSet(exerciseSet)
-                    Text("Set ${index + 1}: $setDataString")
-                }
-            }
-        }
-    }
 }
 
 @Composable

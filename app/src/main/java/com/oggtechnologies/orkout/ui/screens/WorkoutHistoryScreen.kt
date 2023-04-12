@@ -1,6 +1,7 @@
 package com.oggtechnologies.orkout.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.redux.Dispatch
 import com.oggtechnologies.orkout.ui.*
+import com.oggtechnologies.orkout.ui.views.CalendarView
 import java.time.Instant
 import java.util.*
 import kotlin.math.absoluteValue
@@ -93,14 +95,14 @@ private fun Workout.toColor() = idToColor(templateId)
 private fun idToColor(id: Int) =
     if (id == 0) Color.White else Color(
         id.let {
-        ColorUtils.HSLToColor(
-            floatArrayOf(
-                (it.toFloat().absoluteValue * 127) % 360f,
-                0.9f,
-                0.75f
+            ColorUtils.HSLToColor(
+                floatArrayOf(
+                    (it.toFloat().absoluteValue * 127) % 360f,
+                    0.9f,
+                    0.75f
+                )
             )
-        )
-    })
+        })
 
 @Composable
 fun WorkoutRow(workout: Workout, remove: () -> Unit) {
@@ -136,37 +138,39 @@ fun WorkoutRow(workout: Workout, remove: () -> Unit) {
                 "Delete" does remove
             }
         }
-        if (expanded) {
-            Card(
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+        AnimatedVisibility(expanded) {
+            Column {
+                Card(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
                 ) {
-                    for (exercise in workout.exercises) {
-                        Text(text = exercise.name, fontSize = 16.sp)
-                        for (set in exercise.sets) {
-                            Text(
-                                text = exercise.template!!.prettyPrintSet(set),
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        for (exercise in workout.exercises) {
+                            Text(text = exercise.name, fontSize = 16.sp)
+                            for (set in exercise.sets) {
+                                Text(
+                                    text = exercise.template!!.prettyPrintSet(set),
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(start = 16.dp)
+                                )
+                            }
                         }
                     }
                 }
-            }
-            var showDebug: Boolean by remember { mutableStateOf(false) }
-            Button(onClick = { showDebug = !showDebug }) {
-                Text(text = "Toggle Debug")
-            }
-            if (showDebug) {
-                Text(
-                    text = workout.toString(),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                var showDebug: Boolean by remember { mutableStateOf(false) }
+                Button(onClick = { showDebug = !showDebug }) {
+                    Text(text = "Toggle Debug")
+                }
+                if (showDebug) {
+                    Text(
+                        text = workout.toString(),
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
     }

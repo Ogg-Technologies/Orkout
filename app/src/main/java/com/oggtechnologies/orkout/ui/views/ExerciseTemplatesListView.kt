@@ -1,4 +1,4 @@
-package com.oggtechnologies.orkout.ui
+package com.oggtechnologies.orkout.ui.views
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oggtechnologies.orkout.model.store.ExerciseTemplate
 import com.oggtechnologies.orkout.model.store.name
+import com.oggtechnologies.orkout.ui.itemsWithDividers
 
 @Composable
 fun SearchableExerciseTemplatesListView(

@@ -23,6 +23,9 @@ sealed class Screen {
     object ExerciseTemplates : Screen()
 
     @Serializable
+    data class ViewExerciseTemplate(val exerciseTemplateId: Int) : Screen()
+
+    @Serializable
     data class EditExerciseTemplate(val exerciseTemplate: ExerciseTemplate) : Screen()
 
     @Serializable
@@ -52,7 +55,8 @@ infix fun Screen.canNavigateTo(destination: Screen): Boolean {
         )
         is Screen.WorkoutTemplates -> destination is Screen.EditWorkoutTemplate
         is Screen.EditWorkoutTemplate -> destination is Screen.PickExerciseTemplateForWorkoutTemplate
-        is Screen.ExerciseTemplates -> destination is Screen.EditExerciseTemplate
+        is Screen.ExerciseTemplates -> destination is Screen.ViewExerciseTemplate
+        is Screen.ViewExerciseTemplate -> destination is Screen.EditExerciseTemplate
         is Screen.ActiveWorkout -> destination is Screen.PickExerciseInActiveWorkout || destination is Screen.EditExercise
         is Screen.PickExerciseInActiveWorkout -> destination is Screen.EditExercise
         else -> false
