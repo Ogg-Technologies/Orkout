@@ -129,11 +129,12 @@ fun WorkoutRow(workout: Workout, remove: () -> Unit) {
                 Text(text = "$date $time", fontSize = 12.sp)
             }
             Spacer(modifier = Modifier.weight(1f))
-            Column {
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
                 Text(text = "$nExercises exercises")
                 Text(text = "$nSets sets")
             }
-            Spacer(modifier = Modifier.weight(1f))
             SimpleStringOverflowMenu {
                 "Delete" does remove
             }

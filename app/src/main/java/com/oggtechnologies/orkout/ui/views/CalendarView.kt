@@ -1,9 +1,9 @@
 package com.oggtechnologies.orkout.ui.views
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Card
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -64,14 +64,17 @@ fun CalendarView(
             Row {
                 for (j in 0..6) {
                     val date = firstInCalendar.plusDays((i * 7 + j).toLong())
-                    Box(
-                        contentAlignment = Alignment.Center,
+                    Card(
                         modifier = Modifier
-                            .aspectRatio(1f)
                             .weight(1f)
-                            .border(0.2.dp, Color.Gray)
+                            .aspectRatio(1f)
+                            .padding(2.dp)
                     ) {
-                        DateBoxContents(date, selectedMonth, dateRingColor(date))
+                        Box(
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            DateBoxContents(date, selectedMonth, dateRingColor(date))
+                        }
                     }
                 }
             }
@@ -85,7 +88,7 @@ private fun DateBoxContents(
     selectedMonth: LocalDate,
     ringColor: Color?
 ) {
-    val alpha = if (date.month == selectedMonth.month) 1f else 0.4f
+    val alpha = if (date.month == selectedMonth.month) 1f else 0.2f
     Text(
         text = "${date.dayOfMonth}",
         fontSize = 20.sp,
