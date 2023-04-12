@@ -1,4 +1,4 @@
-package com.oggtechnologies.orkout.ui
+package com.oggtechnologies.orkout.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.*
@@ -7,6 +7,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
+import com.oggtechnologies.orkout.ui.BackButton
+import com.oggtechnologies.orkout.ui.SearchableExerciseTemplatesListView
 
 @Composable
 fun ExerciseTemplatesScreen(state: State, dispatch: Dispatch) {

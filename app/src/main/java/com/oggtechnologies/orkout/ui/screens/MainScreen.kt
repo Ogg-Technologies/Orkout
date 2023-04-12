@@ -1,4 +1,4 @@
-package com.oggtechnologies.orkout.ui
+package com.oggtechnologies.orkout.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button

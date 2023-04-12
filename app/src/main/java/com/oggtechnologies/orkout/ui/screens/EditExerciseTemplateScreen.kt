@@ -1,4 +1,4 @@
-package com.oggtechnologies.orkout.ui
+package com.oggtechnologies.orkout.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
+import com.oggtechnologies.orkout.ui.BackButton
 
 @Composable
 fun EditExerciseTemplateScreen(

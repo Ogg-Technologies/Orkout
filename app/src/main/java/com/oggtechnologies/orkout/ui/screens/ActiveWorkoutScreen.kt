@@ -1,4 +1,4 @@
-package com.oggtechnologies.orkout.ui
+package com.oggtechnologies.orkout.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -16,6 +16,7 @@ import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.redux.AsyncThunk
 import com.oggtechnologies.orkout.redux.Dispatch
+import com.oggtechnologies.orkout.ui.*
 import kotlinx.coroutines.delay
 
 @Composable

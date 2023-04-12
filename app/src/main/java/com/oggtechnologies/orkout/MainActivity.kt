@@ -15,8 +15,9 @@ import com.oggtechnologies.orkout.model.database.DBView
 import com.oggtechnologies.orkout.model.database.JsonDatabase
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
-import com.oggtechnologies.orkout.ui.*
+import com.oggtechnologies.orkout.ui.screens.*
 import com.oggtechnologies.orkout.ui.theme.OrkoutTheme
+import com.oggtechnologies.orkout.ui.toast
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -59,13 +60,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun OrkoutApp(state: State, dispatch: Dispatch) {
     val context = LocalContext.current
+    val screen = state.currentScreen
     OrkoutTheme {
-        when (state.currentScreen) {
+        when (screen) {
             is Screen.Main -> MainScreen(state, dispatch)
             is Screen.WorkoutTemplates -> WorkoutTemplatesScreen(state, dispatch)
             is Screen.EditWorkoutTemplate -> {
                 val template =
-                    state.getWorkoutTemplate((state.currentScreen as Screen.EditWorkoutTemplate).workoutTemplateId)
+                    state.getWorkoutTemplate(screen.workoutTemplateId)
                 if (template == null) ErrorScreen(dispatch) else EditWorkoutTemplateScreen(
                     template,
                     state,
@@ -76,9 +78,7 @@ private fun OrkoutApp(state: State, dispatch: Dispatch) {
                 state,
                 dispatch,
                 onExercisePicked = { exerciseTemplate ->
-                    val workoutTemplate = state.getWorkoutTemplate(
-                        (state.currentScreen as Screen.PickExerciseTemplateForWorkoutTemplate).workoutTemplateId
-                    )!!
+                    val workoutTemplate = state.getWorkoutTemplate(screen.workoutTemplateId)!!
                     if (workoutTemplate.suggestedExercises.any { it.id == exerciseTemplate.id }) {
                         context.toast("${exerciseTemplate.name} is already added")
                     } else {
@@ -92,22 +92,25 @@ private fun OrkoutApp(state: State, dispatch: Dispatch) {
                 })
             is Screen.ExerciseTemplates -> ExerciseTemplatesScreen(state, dispatch)
             is Screen.EditExerciseTemplate -> EditExerciseTemplateScreen(
-                state.currentScreen as Screen.EditExerciseTemplate,
+                screen,
                 state,
                 dispatch,
             )
             is Screen.WorkoutHistory -> WorkoutHistoryScreen(state, dispatch)
-            is Screen.ActiveWorkout -> if (state.activeWorkout == null) ErrorScreen(dispatch) else ActiveWorkoutScreen(
-                state.activeWorkout!!,
-                state,
-                dispatch,
-            )
+            is Screen.ActiveWorkout -> {
+                val activeWorkout = state.activeWorkout
+                if (activeWorkout == null) ErrorScreen(dispatch) else ActiveWorkoutScreen(
+                    activeWorkout,
+                    state,
+                    dispatch,
+                )
+            }
             is Screen.PickExerciseInActiveWorkout -> PickExerciseScreen(
                 state,
                 dispatch,
                 onExercisePicked = { dispatch(doStartExercise(state.activeWorkoutId!!, it)) })
             is Screen.EditExercise -> EditExerciseScreen(
-                state.currentScreen as Screen.EditExercise,
+                screen,
                 state,
                 dispatch,
             )

@@ -1,4 +1,4 @@
-package com.oggtechnologies.orkout.ui
+package com.oggtechnologies.orkout.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.Scaffold
@@ -10,6 +10,8 @@ import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.model.store.doNavigateBack
 import com.oggtechnologies.orkout.model.store.getExerciseTemplatesSortedByRecency
 import com.oggtechnologies.orkout.redux.Dispatch
+import com.oggtechnologies.orkout.ui.BackButton
+import com.oggtechnologies.orkout.ui.SearchableExerciseTemplatesListView
 
 @Composable
 fun PickExerciseScreen(state: State, dispatch: Dispatch, onExercisePicked: (ExerciseTemplate) -> Unit) {

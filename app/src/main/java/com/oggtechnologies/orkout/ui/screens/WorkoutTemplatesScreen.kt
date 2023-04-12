@@ -1,4 +1,4 @@
-package com.oggtechnologies.orkout.ui
+package com.oggtechnologies.orkout.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -17,6 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
+import com.oggtechnologies.orkout.ui.BackButton
+import com.oggtechnologies.orkout.ui.ConfirmationHandler
+import com.oggtechnologies.orkout.ui.SimpleStringOverflowMenu
+import com.oggtechnologies.orkout.ui.itemsWithDividers
 
 @Composable
 fun WorkoutTemplatesScreen(state: State, dispatch: Dispatch) = ConfirmationHandler {
