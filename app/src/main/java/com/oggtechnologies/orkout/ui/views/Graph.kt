@@ -1,5 +1,8 @@
 package com.oggtechnologies.orkout.ui.views
 
+import android.graphics.Paint
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -12,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInput
@@ -62,58 +66,38 @@ fun Graph(
         val width = LocalDensity.current.run { maxWidth.toPx() } - leftPad * 2
         val height = LocalDensity.current.run { maxHeight.toPx() } - topPad * 2
 
+        val animationProgress = enteringAnimation()
 
-        val canvasPoints = points.map {
-            it.copy(
-                x = (it.x - minX) / xRange * width,
-                y = height - (it.y - minY) / yRange * height,
-            )
+        fun getCanvasPoints(lerpYTime: Float): List<GraphDataPoint> {
+            return points.map {
+                it.copy(
+                    x = (it.x - minX) / xRange * width,
+                    y = height - (it.y - minY) / yRange * height * lerpYTime,
+                )
+            }
         }
 
+        val canvasPoints = getCanvasPoints(animationProgress.value)
 
+        val onTap = { tapOffset: Offset ->
+            val canvasTapPos = tapOffset - Offset(leftPad, topPad)
+            // Needed because onTap is not recreated as animation progresses otherwise
+            val updatedCanvasPoints = getCanvasPoints(animationProgress.value)
+            val pointIndex = getTappedPointIndex(updatedCanvasPoints, canvasTapPos)
+            selectedPointIndex = pointIndex
+        }
 
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = { tapOffset ->
-                            val canvasTapPos = tapOffset - Offset(leftPad, topPad)
-                            val pointIndex = canvasPoints
-                                .mapIndexed { index, point ->
-                                    index to point
-                                }
-                                .map { (index, point) ->
-                                    index to (Offset(point.x, point.y) - canvasTapPos).getDistance()
-                                }
-                                .filter { (_, distance) ->
-                                    distance < 200
-                                }
-                                .minByOrNull { (_, distance) ->
-                                    distance
-                                }?.first
-                            selectedPointIndex = pointIndex
-                        }
+                        onTap = onTap,
                     )
                 }
                 .padding(contentPadding)
         ) {
-            val strokePath = Path().apply {
-                canvasPoints.zipWithNext().forEachIndexed { index, (point1, point2) ->
-                    if (index == 0) {
-                        moveTo(point1.x, point1.y)
-                    }
-                    val lerpT = 0.6f
-                    cubicTo(
-                        point1.x*(1-lerpT) + point2.x*lerpT,
-                        point1.y,
-                        point1.x*(lerpT) + point2.x*(1-lerpT),
-                        point2.y,
-                        point2.x,
-                        point2.y
-                    )
-                }
-            }
+            val strokePath = createPathFrom(canvasPoints)
             val fillPath = android.graphics.Path(strokePath.asAndroidPath())
                 .asComposePath()
                 .apply {
@@ -140,64 +124,14 @@ fun Graph(
             )
             selectedPointIndex?.let { index ->
                 val point = canvasPoints[index]
-                // Draw radial gradient around point
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            graphColor.copy(alpha = 0.4f),
-                            graphColor.copy(alpha = 0f),
-                        ),
-                        center = Offset(point.x, point.y),
-                        radius = 40+point.dotSize,
-                    ),
-                    center = Offset(point.x, point.y),
-                )
-                // Draw label for point
-                val label = points[index].label
+                drawRadialAroundPoint(point, graphColor)
+                val label = point.label
                 if (label != null) {
-                    drawIntoCanvas { canvas ->
-                        val labelTextSize = 40f
-                        val paint = android.graphics.Paint().apply {
-                            isAntiAlias = true
-                            color = White.toArgb()
-                            textSize = labelTextSize
-                            textAlign = android.graphics.Paint.Align.CENTER
-                        }
-                        val lines = label.split("\n")
-                        lines.mapIndexed { index, line ->
-                            canvas.nativeCanvas.drawText(
-                                line,
-                                point.x,
-                                point.y - (lines.size - index) * labelTextSize,
-                                paint
-                            )
-                        }
-                    }
+                    drawLabelForPoint(point, label)
                 }
-                // Draw x value for point
-                val xLabel = points[index].xLabel
+                val xLabel = point.xLabel
                 if (xLabel != null) {
-                    drawLine(
-                        color = Color.Gray.copy(alpha = 0.5f),
-                        start = Offset(point.x, size.height-20),
-                        end = Offset(point.x, size.height+20),
-                        strokeWidth = 1.dp.toPx(),
-                    )
-                    drawIntoCanvas { canvas ->
-                        val labelTextSize = 40f
-                        val paint = android.graphics.Paint().apply {
-                            isAntiAlias = true
-                            color = White.toArgb()
-                            textSize = labelTextSize
-                            textAlign = android.graphics.Paint.Align.CENTER
-                        }
-                        canvas.nativeCanvas.drawText(
-                            xLabel,
-                            point.x,
-                            size.height+30+labelTextSize,
-                            paint
-                        )
-                    }
+                    drawXLabelForPoint(point, xLabel)
                 }
             }
             for (point in canvasPoints) {
@@ -211,6 +145,123 @@ fun Graph(
 
     }
 }
+
+@Composable
+private fun enteringAnimation(
+    start: Float = 0f,
+    end: Float = 1f,
+    durationMillis: Int = 500
+): State<Float> {
+    var progress by remember { mutableStateOf(start) }
+    val animatedProgress = animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = durationMillis)
+    )
+    LaunchedEffect(Unit) {
+        progress = end
+    }
+    return animatedProgress
+}
+
+private fun DrawScope.drawXLabelForPoint(
+    point: GraphDataPoint,
+    xLabel: String
+) {
+    drawLine(
+        color = Color.Gray.copy(alpha = 0.5f),
+        start = Offset(point.x, size.height - 20),
+        end = Offset(point.x, size.height + 20),
+        strokeWidth = 1.dp.toPx(),
+    )
+    drawIntoCanvas { canvas ->
+        val labelTextSize = 40f
+        val paint = Paint().apply {
+            isAntiAlias = true
+            color = White.toArgb()
+            textSize = labelTextSize
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.nativeCanvas.drawText(
+            xLabel,
+            point.x,
+            size.height + 30 + labelTextSize,
+            paint
+        )
+    }
+}
+
+private fun DrawScope.drawLabelForPoint(
+    point: GraphDataPoint,
+    label: String
+) {
+    drawIntoCanvas { canvas ->
+        val labelTextSize = 40f
+        val paint = Paint().apply {
+            isAntiAlias = true
+            color = White.toArgb()
+            textSize = labelTextSize
+            textAlign = Paint.Align.CENTER
+        }
+        val lines = label.split("\n")
+        lines.mapIndexed { index, line ->
+            canvas.nativeCanvas.drawText(
+                line,
+                point.x,
+                point.y - (lines.size - index) * labelTextSize,
+                paint
+            )
+        }
+    }
+}
+
+private fun DrawScope.drawRadialAroundPoint(
+    point: GraphDataPoint,
+    color: Color
+) {
+    drawCircle(
+        brush = Brush.radialGradient(
+            colors = listOf(
+                color.copy(alpha = 0.4f),
+                color.copy(alpha = 0f),
+            ),
+            center = Offset(point.x, point.y),
+            radius = 40 + point.dotSize,
+        ),
+        center = Offset(point.x, point.y),
+    )
+}
+
+private fun createPathFrom(canvasPoints: List<GraphDataPoint>): Path =
+    Path().apply {
+        canvasPoints.zipWithNext().forEachIndexed { index, (point1, point2) ->
+            if (index == 0) {
+                moveTo(point1.x, point1.y)
+            }
+            val lerpT = 0.6f
+            cubicTo(
+                point1.x * (1 - lerpT) + point2.x * lerpT,
+                point1.y,
+                point1.x * (lerpT) + point2.x * (1 - lerpT),
+                point2.y,
+                point2.x,
+                point2.y
+            )
+        }
+    }
+
+private fun getTappedPointIndex(
+    canvasPoints: List<GraphDataPoint>,
+    canvasTapPos: Offset
+) = canvasPoints
+    .mapIndexed { index, point ->
+        index to (Offset(point.x, point.y) - canvasTapPos).getDistance()
+    }
+    .filter { (_, distance) ->
+        distance < 200
+    }
+    .minByOrNull { (_, distance) ->
+        distance
+    }?.first
 
 @Preview
 @Composable
