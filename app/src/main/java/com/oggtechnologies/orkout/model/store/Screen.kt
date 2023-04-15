@@ -41,28 +41,6 @@ sealed class Screen {
     data class EditExercise(val exerciseIndex: Int) : Screen()
 }
 
-/**
- * Defines which screens can be navigated to from the current screen.
- * You can always go back to the previous screen.
- */
-infix fun Screen.canNavigateTo(destination: Screen): Boolean {
-    return when (this) {
-        is Screen.Main -> destination in listOf(
-            Screen.ActiveWorkout,
-            Screen.WorkoutTemplates,
-            Screen.ExerciseTemplates,
-            Screen.WorkoutHistory,
-        )
-        is Screen.WorkoutTemplates -> destination is Screen.EditWorkoutTemplate
-        is Screen.EditWorkoutTemplate -> destination is Screen.PickExerciseTemplateForWorkoutTemplate
-        is Screen.ExerciseTemplates -> destination is Screen.ViewExerciseTemplate
-        is Screen.ViewExerciseTemplate -> destination is Screen.EditExerciseTemplate
-        is Screen.ActiveWorkout -> destination is Screen.PickExerciseInActiveWorkout || destination is Screen.EditExercise
-        is Screen.PickExerciseInActiveWorkout -> destination is Screen.EditExercise
-        else -> false
-    }
-}
-
 const val SCREEN_CHANGE_DELAY: Long = 40
 private fun doScreenChangeDispatch(action: Action) = doDelayedDispatch(action, SCREEN_CHANGE_DELAY)
 
@@ -85,7 +63,7 @@ fun navigationReducer(
     navigationStack: NavigationStack,
     action: Action,
 ): NavigationStack = when (action) {
-    is NavAction.Goto -> if (navigationStack.last() canNavigateTo action.screen) navigationStack + action.screen else navigationStack
+    is NavAction.Goto -> navigationStack + action.screen
     is NavAction.Back -> if (navigationStack.isNotEmpty()) navigationStack.dropLast(1) else navigationStack
     is NavAction.Home -> listOf(Screen.Main)
     else -> navigationStack
