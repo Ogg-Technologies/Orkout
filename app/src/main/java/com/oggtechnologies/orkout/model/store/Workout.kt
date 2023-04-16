@@ -229,3 +229,7 @@ fun State.getTimedExerciseHistory(exerciseTemplate: ExerciseTemplate): List<Time
             }
         }
         .filter { it.exercise.templateId == exerciseTemplate.id }
+
+fun ExerciseTemplate.hasWeightAndReps(): Boolean = SetDataField.Weight in fields && SetDataField.Reps in fields
+
+fun ExerciseTemplate.fieldsToString() = fields.map { it.name.first() }.joinToString("/")

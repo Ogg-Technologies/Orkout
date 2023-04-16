@@ -16,13 +16,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oggtechnologies.orkout.model.store.ExerciseTemplate
-import com.oggtechnologies.orkout.model.store.name
+import com.oggtechnologies.orkout.model.store.fieldsToString
 import com.oggtechnologies.orkout.ui.itemsWithDividers
 
 @Composable
 fun SearchableExerciseTemplatesListView(
     exerciseTemplates: List<ExerciseTemplate>,
     onItemClick: (ExerciseTemplate) -> Unit,
+    templateRowContent: @Composable (ExerciseTemplate) -> Unit =
+        { DefaultTemplateRowContent(it) }
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -43,10 +45,19 @@ fun SearchableExerciseTemplatesListView(
                 .padding(13.dp),
         )
         Divider()
-        ExerciseTemplatesListView(
-            exerciseTemplates.filterBySearchQuery(searchQuery),
-            onItemClick
-        )
+        LazyColumn(
+            contentPadding = PaddingValues(bottom = 80.dp)
+        ) {
+            itemsWithDividers(exerciseTemplates.filterBySearchQuery(searchQuery)) { exerciseTemplate ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onItemClick(exerciseTemplate) }
+                ) {
+                    templateRowContent(exerciseTemplate)
+                }
+            }
+        }
     }
 }
 
@@ -54,31 +65,13 @@ private fun List<ExerciseTemplate>.filterBySearchQuery(searchQuery: String): Lis
     filter { it.name.contains(searchQuery, ignoreCase = true) }
 
 @Composable
-fun ExerciseTemplatesListView(
-    exerciseTemplates: List<ExerciseTemplate>,
-    onItemClick: (ExerciseTemplate) -> Unit
-) {
-    LazyColumn {
-        itemsWithDividers(exerciseTemplates) { exerciseTemplate ->
-            ExerciseTemplateListItem(exerciseTemplate, onClick = { onItemClick(exerciseTemplate) })
-        }
-    }
-}
-
-@Composable
-private fun ExerciseTemplateListItem(exerciseTemplate: ExerciseTemplate, onClick: () -> Unit) {
+private fun DefaultTemplateRowContent(exerciseTemplate: ExerciseTemplate) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                onClick()
-            }
-            .padding(16.dp)
+        modifier = Modifier.padding(16.dp)
     ) {
         Text(exerciseTemplate.name, fontSize = 20.sp)
         Spacer(modifier = Modifier.weight(1f))
-        val fieldsString = exerciseTemplate.fields.map { it.name.first() }.joinToString("/")
-        Text(fieldsString, fontSize = 15.sp, textAlign = TextAlign.End)
+        Text(exerciseTemplate.fieldsToString(), fontSize = 15.sp, textAlign = TextAlign.End)
     }
 }

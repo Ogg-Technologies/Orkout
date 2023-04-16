@@ -59,7 +59,7 @@ fun ViewExerciseTemplateScreen(
         },
         content = {
             LazyColumn {
-                if (SetDataField.Weight in exerciseTemplate.fields && SetDataField.Reps in exerciseTemplate.fields && history.size > 1) {
+                if (exerciseTemplate.hasWeightAndReps() && history.size > 1) {
                     item {
                         ExerciseGraph(
                             history = history,

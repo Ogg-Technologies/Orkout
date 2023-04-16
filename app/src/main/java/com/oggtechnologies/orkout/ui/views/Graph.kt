@@ -43,7 +43,7 @@ data class GraphDataPoint(
 fun PaddedClickableCanvas(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    onTap: Size.(pixelPosition: Offset) -> Unit,
+    onTap: (Size.(pixelPosition: Offset) -> Unit)? = null,
     onDraw: DrawScope.() -> Unit,
 ) {
     BoxWithConstraints(
@@ -63,14 +63,20 @@ fun PaddedClickableCanvas(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { tapOffset ->
-                            val canvasSize = Size(width, height)
-                            val pixelPosition = tapOffset - Offset(leftPad, topPad)
-                            canvasSize.onTap(pixelPosition)
-                        },
-                    )
+                .run {
+                    if (onTap != null) {
+                        pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = { tapOffset ->
+                                    val canvasSize = Size(width, height)
+                                    val pixelPosition = tapOffset - Offset(leftPad, topPad)
+                                    canvasSize.onTap(pixelPosition)
+                                },
+                            )
+                        }
+                    } else {
+                        this
+                    }
                 }
                 .padding(contentPadding)
         ) {
@@ -91,10 +97,11 @@ fun SelectableGraph(
 
     Graph(
         points = points,
-        modifier = modifier,
+        modifier = modifier
+            .border(1.dp, Color.Gray, shape = RoundedCornerShape(12.dp)),
         contentPadding = contentPadding,
         graphColor = graphColor,
-        drawExtra = {canvasPoints ->
+        drawExtra = { canvasPoints ->
             selectedPointIndex?.let { index ->
                 val point = canvasPoints[index]
                 drawRadialAroundPoint(point, graphColor)
@@ -109,8 +116,9 @@ fun SelectableGraph(
             }
         },
         animationProgress = animationProgress.value,
-        onTap = {graphBounds, pixelPosition ->
-            val canvasPoints = graphBounds.getCanvasPoints(points, animationProgress.value, width, height)
+        onTap = { graphBounds, pixelPosition ->
+            val canvasPoints =
+                graphBounds.getCanvasPoints(points, animationProgress.value, width, height)
             val pointIndex = getTappedPointIndex(canvasPoints, pixelPosition)
             selectedPointIndex = pointIndex
         }
@@ -138,7 +146,12 @@ fun getGraphBounds(points: List<GraphDataPoint>, highestMinY: Float? = 0f): Grap
     return GraphBounds(minX, maxX, minY, maxY)
 }
 
-fun GraphBounds.getCanvasPoints(points: List<GraphDataPoint>, lerpYTime: Float, width: Float, height: Float): List<GraphDataPoint> {
+fun GraphBounds.getCanvasPoints(
+    points: List<GraphDataPoint>,
+    lerpYTime: Float,
+    width: Float,
+    height: Float
+): List<GraphDataPoint> {
     return points.map {
         it.copy(
             x = (it.x - minX) / xRange * width,
@@ -168,19 +181,20 @@ fun Graph(
     graphColor: Color,
     drawExtra: DrawScope.(canvasPoints: List<GraphDataPoint>) -> Unit = {},
     animationProgress: Float = 1f,
-    onTap: Size.(graphBounds: GraphBounds, pixelPosition: Offset) -> Unit = { _, _ -> }
+    onTap: (Size.(graphBounds: GraphBounds, pixelPosition: Offset) -> Unit)? = null
 ) {
     val graphBounds = getGraphBounds(points)
 
     PaddedClickableCanvas(
-        modifier = modifier
-            .border(1.dp, Color.Gray, shape = RoundedCornerShape(12.dp)),
+        modifier = modifier,
         contentPadding = contentPadding,
-        onTap = { pixelPosition ->
-            onTap(graphBounds, pixelPosition)
-        },
+        onTap = if (onTap == null) null else
+            { pixelPosition ->
+                onTap(graphBounds, pixelPosition)
+            },
         onDraw = {
-            val canvasPoints = graphBounds.getCanvasPoints(points, animationProgress, size.width, size.height)
+            val canvasPoints =
+                graphBounds.getCanvasPoints(points, animationProgress, size.width, size.height)
             val strokePath = createPathFrom(canvasPoints)
             val fillPath = android.graphics.Path(strokePath.asAndroidPath())
                 .asComposePath()
@@ -202,7 +216,7 @@ fun Graph(
                 path = strokePath,
                 color = graphColor,
                 style = Stroke(
-                    width = 2.dp.toPx(),
+                    width = (size.width / 500).dp.toPx(),
                     cap = StrokeCap.Round,
                 )
             )
@@ -210,7 +224,7 @@ fun Graph(
             for (point in canvasPoints) {
                 drawCircle(
                     color = graphColor,
-                    radius = point.dotSize,
+                    radius = point.dotSize * size.width,
                     center = Offset(point.x, point.y)
                 )
             }
@@ -367,7 +381,7 @@ fun List<TimedExercise>.toGraphDataPoints(): List<GraphDataPoint> =
         GraphDataPoint(
             x = dateTime.toLocalDate().toEpochDay().toFloat(),
             y = weight.toFloat(),
-            dotSize = reps.toFloat() * 2,
+            dotSize = reps.toFloat() / 400,
             label = "$weight kg\n$reps reps",
             xLabel = dateTime.toLocalDate().toString()
         )
