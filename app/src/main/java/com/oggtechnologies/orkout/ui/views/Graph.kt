@@ -13,6 +13,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -23,7 +24,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.oggtechnologies.orkout.model.store.ExerciseSet
+import com.oggtechnologies.orkout.ui.screens.TimedExercise
 import com.oggtechnologies.orkout.ui.theme.OrkoutTheme
+import java.lang.Float.max
 import java.lang.Float.min
 
 data class GraphDataPoint(
@@ -36,24 +40,14 @@ data class GraphDataPoint(
 )
 
 @Composable
-fun Graph(
-    points: List<GraphDataPoint>,
+fun PaddedClickableCanvas(
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    onTap: Size.(pixelPosition: Offset) -> Unit,
+    onDraw: DrawScope.() -> Unit,
 ) {
-    val minX = points.minByOrNull { it.x }?.x ?: 0f
-    val maxX = points.maxByOrNull { it.x }?.x ?: 0f
-    val minY = min(points.minByOrNull { it.y }?.y ?: 0f, 0f)
-    val maxY = points.maxByOrNull { it.y }?.y ?: 0f
-    val xRange = maxX - minX
-    val yRange = maxY - minY
-    val graphColor = MaterialTheme.colors.secondary
-
-    var selectedPointIndex: Int? by remember { mutableStateOf(null) }
-
     BoxWithConstraints(
         modifier = modifier
-            .border(1.dp, Color.Gray, shape = RoundedCornerShape(12.dp))
     ) {
         val leftPad = LocalDensity.current.run {
             contentPadding.calculateLeftPadding(
@@ -66,37 +60,127 @@ fun Graph(
         val width = LocalDensity.current.run { maxWidth.toPx() } - leftPad * 2
         val height = LocalDensity.current.run { maxHeight.toPx() } - topPad * 2
 
-        val animationProgress = enteringAnimation()
-
-        fun getCanvasPoints(lerpYTime: Float): List<GraphDataPoint> {
-            return points.map {
-                it.copy(
-                    x = (it.x - minX) / xRange * width,
-                    y = height - (it.y - minY) / yRange * height * lerpYTime,
-                )
-            }
-        }
-
-        val canvasPoints = getCanvasPoints(animationProgress.value)
-
-        val onTap = { tapOffset: Offset ->
-            val canvasTapPos = tapOffset - Offset(leftPad, topPad)
-            // Needed because onTap is not recreated as animation progresses otherwise
-            val updatedCanvasPoints = getCanvasPoints(animationProgress.value)
-            val pointIndex = getTappedPointIndex(updatedCanvasPoints, canvasTapPos)
-            selectedPointIndex = pointIndex
-        }
-
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = onTap,
+                        onTap = { tapOffset ->
+                            val canvasSize = Size(width, height)
+                            val pixelPosition = tapOffset - Offset(leftPad, topPad)
+                            canvasSize.onTap(pixelPosition)
+                        },
                     )
                 }
                 .padding(contentPadding)
         ) {
+            onDraw()
+        }
+    }
+}
+
+@Composable
+fun SelectableGraph(
+    points: List<GraphDataPoint>,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+) {
+    var selectedPointIndex: Int? by remember { mutableStateOf(null) }
+    val animationProgress = enteringAnimation()
+    val graphColor = MaterialTheme.colors.secondary
+
+    Graph(
+        points = points,
+        modifier = modifier,
+        contentPadding = contentPadding,
+        graphColor = graphColor,
+        drawExtra = {canvasPoints ->
+            selectedPointIndex?.let { index ->
+                val point = canvasPoints[index]
+                drawRadialAroundPoint(point, graphColor)
+                val label = point.label
+                if (label != null) {
+                    drawLabelForPoint(point, label)
+                }
+                val xLabel = point.xLabel
+                if (xLabel != null) {
+                    drawXLabelForPoint(point, xLabel)
+                }
+            }
+        },
+        animationProgress = animationProgress.value,
+        onTap = {graphBounds, pixelPosition ->
+            val canvasPoints = graphBounds.getCanvasPoints(points, animationProgress.value, width, height)
+            val pointIndex = getTappedPointIndex(canvasPoints, pixelPosition)
+            selectedPointIndex = pointIndex
+        }
+    )
+}
+
+data class GraphBounds(
+    val minX: Float,
+    val maxX: Float,
+    val minY: Float,
+    val maxY: Float,
+) {
+    val xRange = maxX - minX
+    val yRange = maxY - minY
+}
+
+fun getGraphBounds(points: List<GraphDataPoint>, highestMinY: Float? = 0f): GraphBounds {
+    val minX = points.minByOrNull { it.x }?.x ?: 0f
+    val proposedMaxX = points.maxByOrNull { it.x }?.x ?: 0f
+    val maxX = max(proposedMaxX, minX + 1)
+    val proposedMinY = points.minByOrNull { it.y }?.y ?: 0f
+    val minY = if (highestMinY != null) min(proposedMinY, highestMinY) else proposedMinY
+    val proposedMaxY = points.maxByOrNull { it.y }?.y ?: 0f
+    val maxY = max(proposedMaxY, minY + 1)
+    return GraphBounds(minX, maxX, minY, maxY)
+}
+
+fun GraphBounds.getCanvasPoints(points: List<GraphDataPoint>, lerpYTime: Float, width: Float, height: Float): List<GraphDataPoint> {
+    return points.map {
+        it.copy(
+            x = (it.x - minX) / xRange * width,
+            y = height - (it.y - minY) / yRange * height * lerpYTime,
+        )
+    }
+}
+
+@Composable
+fun SimpleGraph(
+    points: List<GraphDataPoint>,
+    modifier: Modifier = Modifier,
+) {
+    val graphColor = MaterialTheme.colors.secondary
+    Graph(
+        points = points,
+        modifier = modifier,
+        graphColor = graphColor,
+    )
+}
+
+@Composable
+fun Graph(
+    points: List<GraphDataPoint>,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    graphColor: Color,
+    drawExtra: DrawScope.(canvasPoints: List<GraphDataPoint>) -> Unit = {},
+    animationProgress: Float = 1f,
+    onTap: Size.(graphBounds: GraphBounds, pixelPosition: Offset) -> Unit = { _, _ -> }
+) {
+    val graphBounds = getGraphBounds(points)
+
+    PaddedClickableCanvas(
+        modifier = modifier
+            .border(1.dp, Color.Gray, shape = RoundedCornerShape(12.dp)),
+        contentPadding = contentPadding,
+        onTap = { pixelPosition ->
+            onTap(graphBounds, pixelPosition)
+        },
+        onDraw = {
+            val canvasPoints = graphBounds.getCanvasPoints(points, animationProgress, size.width, size.height)
             val strokePath = createPathFrom(canvasPoints)
             val fillPath = android.graphics.Path(strokePath.asAndroidPath())
                 .asComposePath()
@@ -122,18 +206,7 @@ fun Graph(
                     cap = StrokeCap.Round,
                 )
             )
-            selectedPointIndex?.let { index ->
-                val point = canvasPoints[index]
-                drawRadialAroundPoint(point, graphColor)
-                val label = point.label
-                if (label != null) {
-                    drawLabelForPoint(point, label)
-                }
-                val xLabel = point.xLabel
-                if (xLabel != null) {
-                    drawXLabelForPoint(point, xLabel)
-                }
-            }
+            drawExtra(canvasPoints)
             for (point in canvasPoints) {
                 drawCircle(
                     color = graphColor,
@@ -142,8 +215,7 @@ fun Graph(
                 )
             }
         }
-
-    }
+    )
 }
 
 @Composable
@@ -268,7 +340,7 @@ private fun getTappedPointIndex(
 fun GraphPreview() {
     OrkoutTheme {
         Surface(color = MaterialTheme.colors.background) {
-            Graph(
+            SelectableGraph(
                 points = listOf(
                     1f to 2f,
                     2f to 4.5f,
@@ -285,3 +357,18 @@ fun GraphPreview() {
         }
     }
 }
+
+fun List<TimedExercise>.toGraphDataPoints(): List<GraphDataPoint> =
+    this.reversed().map { (exercise, dateTime) ->
+        val bestSet =
+            exercise.sets.maxWithOrNull(compareBy<ExerciseSet> { it.weight }.thenBy { it.reps })
+        val weight = bestSet?.weight ?: 0
+        val reps = bestSet?.reps ?: 0
+        GraphDataPoint(
+            x = dateTime.toLocalDate().toEpochDay().toFloat(),
+            y = weight.toFloat(),
+            dotSize = reps.toFloat() * 2,
+            label = "$weight kg\n$reps reps",
+            xLabel = dateTime.toLocalDate().toString()
+        )
+    }

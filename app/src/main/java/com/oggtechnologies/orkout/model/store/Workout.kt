@@ -3,6 +3,7 @@ package com.oggtechnologies.orkout.model.store
 import com.oggtechnologies.orkout.model.database.DBView
 import com.oggtechnologies.orkout.redux.Action
 import com.oggtechnologies.orkout.redux.Thunk
+import com.oggtechnologies.orkout.ui.screens.TimedExercise
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -196,7 +197,11 @@ fun doRemoveSet(setId: Int) = Thunk { _, _ ->
 }
 
 fun State.getExerciseTemplatesSortedByRecency(): List<ExerciseTemplate> {
-    data class Recency(val exerciseTemplate: ExerciseTemplate, val lastWorkoutTime: Long, val indexInWorkout: Int)
+    data class Recency(
+        val exerciseTemplate: ExerciseTemplate,
+        val lastWorkoutTime: Long,
+        val indexInWorkout: Int
+    )
 
     val recency = exerciseTemplates.map { exerciseTemplate ->
         for (workout in workoutHistory) { // Most recent workout appears first in list
@@ -215,3 +220,12 @@ fun State.getExerciseTemplatesSortedByRecency(): List<ExerciseTemplate> {
             .thenBy { it.exerciseTemplate.name }
     ).map { it.exerciseTemplate }
 }
+
+fun State.getTimedExerciseHistory(exerciseTemplate: ExerciseTemplate): List<TimedExercise> =
+    workoutHistory
+        .flatMap { workout ->
+            workout.exercises.reversed().map { exercise ->
+                TimedExercise(exercise, workout.startTime.asMillisToLocalDateTime())
+            }
+        }
+        .filter { it.exercise.templateId == exerciseTemplate.id }

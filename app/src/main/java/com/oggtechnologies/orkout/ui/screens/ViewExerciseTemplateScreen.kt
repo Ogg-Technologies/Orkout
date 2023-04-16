@@ -17,8 +17,8 @@ import com.oggtechnologies.orkout.model.store.*
 import com.oggtechnologies.orkout.redux.Dispatch
 import com.oggtechnologies.orkout.ui.BackButton
 import com.oggtechnologies.orkout.ui.views.ExerciseInfoCardView
-import com.oggtechnologies.orkout.ui.views.Graph
-import com.oggtechnologies.orkout.ui.views.GraphDataPoint
+import com.oggtechnologies.orkout.ui.views.SelectableGraph
+import com.oggtechnologies.orkout.ui.views.toGraphDataPoints
 import java.time.LocalDateTime
 
 data class TimedExercise(
@@ -35,13 +35,7 @@ fun ViewExerciseTemplateScreen(
     BackHandler {
         dispatch(doNavigateBack())
     }
-    val history = state.workoutHistory
-        .flatMap { workout ->
-            workout.exercises.reversed().map { exercise ->
-                TimedExercise(exercise, workout.startTime.asMillisToLocalDateTime())
-            }
-        }
-        .filter { it.exercise.templateId == exerciseTemplate.id }
+    val history = state.getTimedExerciseHistory(exerciseTemplate)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,20 +83,8 @@ fun ViewExerciseTemplateScreen(
 fun ExerciseGraph(
     history: List<TimedExercise>
 ) {
-    val points = history.reversed().map { (exercise, dateTime) ->
-        val bestSet =
-            exercise.sets.maxWithOrNull(compareBy<ExerciseSet> { it.weight }.thenBy { it.reps })
-        val weight = bestSet?.weight ?: 0
-        val reps = bestSet?.reps ?: 0
-        GraphDataPoint(
-            x = dateTime.toLocalDate().toEpochDay().toFloat(),
-            y = weight.toFloat(),
-            dotSize = reps.toFloat()*2,
-            label = "$weight kg\n$reps reps",
-            xLabel = dateTime.toLocalDate().toString()
-        )
-    }
-    Graph(
+    val points = history.toGraphDataPoints()
+    SelectableGraph(
         points = points,
         modifier = Modifier
             .fillMaxWidth()
