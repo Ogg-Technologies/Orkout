@@ -224,12 +224,16 @@ fun State.getExerciseTemplatesSortedByRecency(): List<ExerciseTemplate> {
 fun State.getTimedExerciseHistory(exerciseTemplate: ExerciseTemplate): List<TimedExercise> =
     workoutHistory
         .flatMap { workout ->
-            workout.exercises.reversed().map { exercise ->
-                TimedExercise(exercise, workout.startTime.asMillisToLocalDateTime())
-            }
+            workout.exercises
+                .reversed()
+                .filter { exercise -> exercise.sets.isNotEmpty() }
+                .map { exercise ->
+                    TimedExercise(exercise, workout.startTime.asMillisToLocalDateTime())
+                }
         }
         .filter { it.exercise.templateId == exerciseTemplate.id }
 
-fun ExerciseTemplate.hasWeightAndReps(): Boolean = SetDataField.Weight in fields && SetDataField.Reps in fields
+fun ExerciseTemplate.hasWeightAndReps(): Boolean =
+    SetDataField.Weight in fields && SetDataField.Reps in fields
 
 fun ExerciseTemplate.fieldsToString() = fields.map { it.name.first() }.joinToString("/")

@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +19,6 @@ import com.oggtechnologies.orkout.model.store.State
 import com.oggtechnologies.orkout.redux.Dispatch
 import com.oggtechnologies.orkout.ui.BackButton
 import com.oggtechnologies.orkout.ui.itemsIndexedWithDividers
-import com.oggtechnologies.orkout.ui.views.ExerciseInfoCardView
 
 @Composable
 fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Dispatch) {
@@ -51,11 +52,36 @@ fun EditExerciseScreen(screen: Screen.EditExercise, state: State, dispatch: Disp
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (lastTimeExercise != null) {
-                    ExerciseInfoCardView(
-                        header = "Last time you did this exercise:",
-                        exercise = lastTimeExercise,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Card(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text("Last time you did this exercise:", fontSize = 18.sp, modifier = Modifier.weight(1f))
+                                IconButton(onClick = { dispatch(doNavigateTo(Screen.ViewExerciseTemplate(exercise.templateId))) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Menu,
+                                        contentDescription = "Edit Exercise Template"
+                                    )
+                                }
+                            }
+                            Column(
+                                modifier = Modifier.padding(start = 20.dp)
+                            ) {
+                                lastTimeExercise.sets.forEachIndexed { index, exerciseSet ->
+                                    val setDataString = lastTimeExercise.template!!.prettyPrintSet(exerciseSet)
+                                    Text("Set ${index + 1}: $setDataString")
+                                }
+                            }
+                        }
+                    }
                 }
                 LazyColumn(
                     modifier = Modifier
